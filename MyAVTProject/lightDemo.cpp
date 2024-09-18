@@ -31,6 +31,7 @@
 #include "AVTmathLib.h"
 #include "VertexAttrDef.h"
 #include "geometry.h"
+#include "camera.h"
 
 #include "avtFreeType.h"
 
@@ -67,15 +68,13 @@ GLint normal_uniformId;
 GLint lPos_uniformId;
 GLint tex_loc, tex_loc1, tex_loc2;
 	
-// Camera Position
-float camX, camY, camZ;
+// Cameras
+int activeCamera = 0;
+Camera cameras[3];
+float ratio = (1.0f * WinX) / WinY;
 
 // Mouse Tracking Variables
 int startX, startY, tracking = 0;
-
-// Camera Spherical Coordinates
-float alpha = 39.0f, beta = 51.0f;
-float r = 10.0f;
 
 // Frame counting and FPS computation
 long myTime,timebase = 0,frame = 0;
@@ -107,7 +106,6 @@ void refresh(int value)
 
 void changeSize(int w, int h) {
 
-	float ratio;
 	// Prevent a divide by zero, when window is too short
 	if(h == 0)
 		h = 1;
@@ -115,8 +113,7 @@ void changeSize(int w, int h) {
 	glViewport(0, 0, w, h);
 	// set the projection matrix
 	ratio = (1.0f * w) / h;
-	loadIdentity(PROJECTION);
-	perspective(53.13f, ratio, 0.1f, 1000.0f);
+	cameras[activeCamera].updateProjectionMatrix(ratio);
 }
 
 
@@ -135,7 +132,8 @@ void renderScene(void) {
 	loadIdentity(VIEW);
 	loadIdentity(MODEL);
 	// set the camera using a function similar to gluLookAt
-	lookAt(camX, camY, camZ, 0,0,0, 0,1,0);
+	vector<float> cameraPos = cameras[activeCamera].getPosition();
+	lookAt(cameraPos[0], cameraPos[1], cameraPos[2], cameras[activeCamera].target[0], cameras[activeCamera].target[1], cameras[activeCamera].target[2], cameras[activeCamera].up[0], cameras[activeCamera].up[1], cameras[activeCamera].up[2]);
 
 	// use our shader
 	
@@ -148,7 +146,7 @@ void renderScene(void) {
 		multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
 		glUniform4fv(lPos_uniformId, 1, res);
 
-	int objId=0; //id of the object mesh - to be used as index of mesh: Mymeshes[objID] means the current mesh
+	//int objId=0; //id of the object mesh - to be used as index of mesh: Mymeshes[objID] means the current mesh
 
 	for each (struct SceneElement element in myElements) {
 		// send the material
@@ -162,6 +160,7 @@ void renderScene(void) {
 		glUniform1f(loc, element.mesh.mat.shininess);
 		pushMatrix(MODEL);
 		translate(MODEL, element.translation);
+		rotate(MODEL, element.rotation);
 
 		// send matrices to OGL
 		computeDerivedMatrix(PROJ_VIEW_MODEL);
@@ -221,10 +220,22 @@ void processKeys(unsigned char key, int xx, int yy)
 			break;
 
 		case 'c': 
-			printf("Camera Spherical Coordinates (%f, %f, %f)\n", alpha, beta, r);
+			printf("Camera Spherical Coordinates (%f, %f, %f)\n", cameras[activeCamera].alpha, cameras[activeCamera].beta, cameras[activeCamera].distance);
 			break;
 		case 'm': glEnable(GL_MULTISAMPLE); break;
 		case 'n': glDisable(GL_MULTISAMPLE); break;
+		case '1': 
+			activeCamera = 0;
+			cameras[activeCamera].updateProjectionMatrix(ratio);
+			break;
+		case '2': 
+			activeCamera = 1; 
+			cameras[activeCamera].updateProjectionMatrix(ratio);
+			break;
+		case '3': 
+			activeCamera = 2; 
+			cameras[activeCamera].updateProjectionMatrix(ratio);
+			break;
 	}
 }
 
@@ -249,13 +260,13 @@ void processMouseButtons(int button, int state, int xx, int yy)
 	//stop tracking the mouse
 	else if (state == GLUT_UP) {
 		if (tracking == 1) {
-			alpha -= (xx - startX);
-			beta += (yy - startY);
+			cameras[activeCamera].alpha -= (xx - startX);
+			cameras[activeCamera].beta += (yy - startY);
 		}
 		else if (tracking == 2) {
-			r += (yy - startY) * 0.01f;
-			if (r < 0.1f)
-				r = 0.1f;
+			cameras[activeCamera].distance += (yy - startY) * 0.01f;
+			if (cameras[activeCamera].distance < 0.1f)
+				cameras[activeCamera].distance = 0.1f;
 		}
 		tracking = 0;
 	}
@@ -277,28 +288,34 @@ void processMouseMotion(int xx, int yy)
 	if (tracking == 1) {
 
 
-		alphaAux = alpha + deltaX;
-		betaAux = beta + deltaY;
+		alphaAux = cameras[activeCamera].alpha + deltaX;
+		betaAux = cameras[activeCamera].beta + deltaY;
 
 		if (betaAux > 85.0f)
 			betaAux = 85.0f;
 		else if (betaAux < -85.0f)
 			betaAux = -85.0f;
-		rAux = r;
+		rAux = cameras[activeCamera].distance;
 	}
 	// right mouse button: zoom
 	else if (tracking == 2) {
 
-		alphaAux = alpha;
-		betaAux = beta;
-		rAux = r + (deltaY * 0.01f);
+		alphaAux = cameras[activeCamera].alpha;
+		betaAux = cameras[activeCamera].beta;
+		rAux = cameras[activeCamera].distance + (deltaY * 0.01f);
 		if (rAux < 0.1f)
 			rAux = 0.1f;
 	}
 
-	camX = rAux * sin(alphaAux * 3.14f / 180.0f) * cos(betaAux * 3.14f / 180.0f);
-	camZ = rAux * cos(alphaAux * 3.14f / 180.0f) * cos(betaAux * 3.14f / 180.0f);
-	camY = rAux *   						       sin(betaAux * 3.14f / 180.0f);
+	if (activeCamera == 0) {
+		cameras[activeCamera].distance = rAux;
+		cameras[activeCamera].setOffset(alphaAux, betaAux);
+	}
+	else if (activeCamera == 1) {
+		cameras[activeCamera].distance = rAux;
+		cameras[activeCamera].setOffset();
+	}
+
 
 //  uncomment this if not using an idle or refresh func
 //	glutPostRedisplay();
@@ -306,14 +323,15 @@ void processMouseMotion(int xx, int yy)
 
 
 void mouseWheel(int wheel, int direction, int x, int y) {
+	if (activeCamera == 2) {
+		return;
+	}
 
-	r += direction * 0.1f;
-	if (r < 0.1f)
-		r = 0.1f;
+	cameras[activeCamera].distance += direction * 0.1f;
+	if (cameras[activeCamera].distance < 0.1f)
+		cameras[activeCamera].distance = 0.1f;
 
-	camX = r * sin(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-	camY = r *   						     sin(beta * 3.14f / 180.0f);
+	cameras[activeCamera].setOffset();
 
 //  uncomment this if not using an idle or refresh func
 //	glutPostRedisplay();
@@ -392,11 +410,9 @@ void init()
 	/// Initialization of freetype library with font_name file
 	freeType_init(font_name);
 
-	// set the camera position based on its spherical coordinates
-	camX = r * sin(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-	camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-	camY = r *   						     sin(beta * 3.14f / 180.0f);
-
+	cameras[0] = Camera(0, 10.0F, 39.0F, 51.0F);
+	cameras[1] = Camera(0, 20.0F, 0.0F, 90.0F);
+	cameras[2] = Camera(1, 20.0F, 0.0F, 90.0F);
 	
 	float amb[]= {0.2f, 0.15f, 0.1f, 1.0f};
 	float diff[] = {0.8f, 0.6f, 0.4f, 1.0f};
@@ -406,6 +422,7 @@ void init()
 	int texcount = 0;
 
 	// create geometry and VAO of the pawn
+	/*
 	element.mesh = createPawn();
 	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
 	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
@@ -427,12 +444,12 @@ void init()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 2, 0, 1 }; //Starting position
 	myElements.push_back(element);
-
-	float amb1[]= {0.3f, 0.0f, 0.0f, 1.0f};
-	float diff1[] = {0.8f, 0.1f, 0.1f, 1.0f};
+	*/
+	float amb1[]= {0.0f, 0.3f, 1.0f, 1.0f};
+	float diff1[] = {0.1f, 0.1f, 0.8f, 1.0f};
 	float spec1[] = {0.9f, 0.9f, 0.9f, 1.0f};
 	shininess=500.0;
-
+	/*
 	// create geometry and VAO of the cylinder
 	element.mesh = createCylinder(1.5f, 0.5f, 20);
 	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
@@ -454,7 +471,7 @@ void init()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 0, 0, 1 }; //Starting position
 	myElements.push_back(element);
-
+	
 	element.mesh = createCube();
 	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
 	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
@@ -464,6 +481,100 @@ void init()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 1, 0, 0 }; //Starting position
 	myElements.push_back(element);
+	*/
+	element.mesh = createQuad(80.0F, 80.0F);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = {0.0F, 0.0F, 0.0F};
+	element.rotation = {-90.0F, 1.0F, 0.0F, 0.0F};
+	myElements.push_back(element);
+	//meshRotationDirection.push_back({ 1.0f, 0.0f, 0.0f });
+	//meshRotationAngle.push_back(90.0f);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { -1.0F, 0.0F, 0.0F }; //Starting position
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { -1.0F, 0.0F, 5.0F }; //Starting position
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 5.0F, 0.0F, -3.0F }; //Starting position
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 5.0F, 0.0F, 2.0F }; //Starting position
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 13.0F, 0.0F, 0.0F }; //Starting position
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = {12.0F, 0.0F, 5.0F}; //Starting position
+	myElements.push_back(element);
+
+	element.mesh = createCube();
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 3.0F, 0.0F, 7.0F }; //Starting position
+	myElements.push_back(element);
+
+	element.mesh = createCube();
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 10.0F, 0.0F, -9.0F }; //Starting position
+	myElements.push_back(element);
+
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
