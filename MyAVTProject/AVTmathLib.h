@@ -34,6 +34,12 @@
 			PROJ_VIEW_MODEL
 		};
 
+		void translate(MatrixTypes aType, std::vector<float> v);
+
+		void scale(MatrixTypes aType, std::vector<float> v);
+
+		void rotate(MatrixTypes aType, std::vector<float> v);
+
 		/** Similar to glTranslate*. 
 		  *
 		  * \param aType any value from MatrixTypes

@@ -22,6 +22,13 @@ struct MyMesh {
 		struct Material mat;
 	};
 
+struct SceneElement {
+	struct MyMesh mesh;
+	std::vector<float> translation;
+	std::vector<float> scale;
+	std::vector<float> rotation;
+};
+
 MyMesh createCube();
 MyMesh createQuad(float size_x, float size_y);
 MyMesh createSphere(float radius, int divisions);

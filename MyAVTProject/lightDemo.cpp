@@ -8,7 +8,7 @@
 // The code comes with no warranties, use it at your own risk.
 // You may use it, or parts of it, wherever you want.
 // 
-// Author: João Madeiras Pereira
+// Author: Joï¿½o Madeiras Pereira
 //
 
 #include <math.h>
@@ -50,7 +50,7 @@ VSShaderLib shaderText;  //render bitmap text
 const string font_name = "fonts/arial.ttf";
 
 //Vector with meshes
-vector<struct MyMesh> myMeshes;
+vector<struct SceneElement> myElements;
 
 //External array storage defined in AVTmathLib.cpp
 
@@ -150,39 +150,34 @@ void renderScene(void) {
 
 	int objId=0; //id of the object mesh - to be used as index of mesh: Mymeshes[objID] means the current mesh
 
-	for (int i = 0 ; i < 2; ++i) {
-		for (int j = 0; j < 3; ++j) {
-			if (objId == 5) {
-				continue;
-			}
-			// send the material
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
-			glUniform4fv(loc, 1, myMeshes[objId].mat.ambient);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
-			glUniform4fv(loc, 1, myMeshes[objId].mat.diffuse);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
-			glUniform4fv(loc, 1, myMeshes[objId].mat.specular);
-			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
-			glUniform1f(loc, myMeshes[objId].mat.shininess);
-			pushMatrix(MODEL);
-			translate(MODEL, i*2.0f, 0.0f, j*2.0f);
+	for each (struct SceneElement element in myElements) {
+		// send the material
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+		glUniform4fv(loc, 1, element.mesh.mat.ambient);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+		glUniform4fv(loc, 1, element.mesh.mat.diffuse);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+		glUniform4fv(loc, 1, element.mesh.mat.specular);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+		glUniform1f(loc, element.mesh.mat.shininess);
+		pushMatrix(MODEL);
+		translate(MODEL, element.translation);
 
-			// send matrices to OGL
-			computeDerivedMatrix(PROJ_VIEW_MODEL);
-			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
-			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
-			computeNormalMatrix3x3();
-			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+		// send matrices to OGL
+		computeDerivedMatrix(PROJ_VIEW_MODEL);
+		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+		computeNormalMatrix3x3();
+		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
 
-			// Render mesh
-			glBindVertexArray(myMeshes[objId].vao);
+		// Render mesh
+		glBindVertexArray(element.mesh.vao);
 			
-			glDrawElements(myMeshes[objId].type, myMeshes[objId].numIndexes, GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
+		glDrawElements(element.mesh.type, element.mesh.numIndexes, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
 
-			popMatrix(MODEL);
-			objId++;
-		}
+		popMatrix(MODEL);
+
 	}
 
 	//Render text (bitmap fonts) in screen coordinates. So use ortoghonal projection with viewport coordinates.
@@ -384,7 +379,7 @@ GLuint setupShaders() {
 
 void init()
 {
-	MyMesh amesh;
+	SceneElement element;
 
 	/* Initialization of DevIL */
 	if (ilGetInteger(IL_VERSION_NUM) < IL_VERSION)
@@ -411,25 +406,27 @@ void init()
 	int texcount = 0;
 
 	// create geometry and VAO of the pawn
-	amesh = createPawn();
-	memcpy(amesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(amesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(amesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(amesh.mat.emissive, emissive, 4 * sizeof(float));
-	amesh.mat.shininess = shininess;
-	amesh.mat.texCount = texcount;
-	myMeshes.push_back(amesh);
+	element.mesh = createPawn();
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 0, 0, 0 }; //Starting position
+	myElements.push_back(element);
 
 	
 	// create geometry and VAO of the sphere
-	amesh = createSphere(1.0f, 20);
-	memcpy(amesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(amesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(amesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(amesh.mat.emissive, emissive, 4 * sizeof(float));
-	amesh.mat.shininess = shininess;
-	amesh.mat.texCount = texcount;
-	myMeshes.push_back(amesh);
+	element.mesh = createSphere(1.0f, 20);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 2, 0, 1 }; //Starting position
+	myElements.push_back(element);
 
 	float amb1[]= {0.3f, 0.0f, 0.0f, 1.0f};
 	float diff1[] = {0.8f, 0.1f, 0.1f, 1.0f};
@@ -437,33 +434,36 @@ void init()
 	shininess=500.0;
 
 	// create geometry and VAO of the cylinder
-	amesh = createCylinder(1.5f, 0.5f, 20);
-	memcpy(amesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(amesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(amesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(amesh.mat.emissive, emissive, 4 * sizeof(float));
-	amesh.mat.shininess = shininess;
-	amesh.mat.texCount = texcount;
-	myMeshes.push_back(amesh);
+	element.mesh = createCylinder(1.5f, 0.5f, 20);
+	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 1, 0, 1 }; //Starting position
+	myElements.push_back(element);
 
 	// create geometry and VAO of the 
-	amesh = createCone(1.5f, 0.5f, 20);
-	memcpy(amesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(amesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(amesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(amesh.mat.emissive, emissive, 4 * sizeof(float));
-	amesh.mat.shininess = shininess;
-	amesh.mat.texCount = texcount;
-	myMeshes.push_back(amesh);
+	element.mesh = createCone(1.5f, 0.5f, 20);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 0, 0, 1 }; //Starting position
+	myElements.push_back(element);
 
-	amesh = createCube();
-	memcpy(amesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(amesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(amesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(amesh.mat.emissive, emissive, 4 * sizeof(float));
-	amesh.mat.shininess = shininess;
-	amesh.mat.texCount = texcount;
-	myMeshes.push_back(amesh);
+	element.mesh = createCube();
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 1, 0, 0 }; //Starting position
+	myElements.push_back(element);
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);

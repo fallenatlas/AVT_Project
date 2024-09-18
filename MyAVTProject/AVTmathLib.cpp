@@ -104,6 +104,10 @@ void loadMatrix(MatrixTypes aType, float *aMatrix)
 	memcpy(mMatrix[aType], aMatrix, 16 * sizeof(float));
 }
 
+void translate(MatrixTypes aType, std::vector<float> v)
+{
+	translate(aType, v[0], v[1], v[2]);
+}
 
 // glTranslate implementation with matrix selection
 void translate(MatrixTypes aType, float x, float y, float z) 
@@ -118,6 +122,11 @@ void translate(MatrixTypes aType, float x, float y, float z)
 	multMatrix(aType,mat);
 }
 
+void scale(MatrixTypes aType, std::vector<float> v)
+{
+	scale(aType, v[0], v[1], v[2]);
+}
+
 // glScale implementation with matrix selection
 void scale(MatrixTypes aType, float x, float y, float z) 
 {
@@ -129,6 +138,11 @@ void scale(MatrixTypes aType, float x, float y, float z)
 	mat[10] = z;
 
 	multMatrix(aType,mat);
+}
+
+void rotate(MatrixTypes aType, std::vector<float> v)
+{
+	rotate(aType, v[0], v[1], v[2], v[3]);
 }
 
 // glRotate implementation with matrix selection
