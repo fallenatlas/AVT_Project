@@ -38,6 +38,6 @@ public:
 		if (type == 0)
 			perspective(53.13f, ratio, 0.1f, 1000.0f);
 		else
-			ortho(-20.0F, 20.0F, -20.0F/ratio, 20.0F/ratio, 0.1F, 50.0F);
+			ortho(-80.0F, 80.0F, -80.0F/ratio, 80.0F/ratio, 0.1F, 50.0F);
 	}
 };

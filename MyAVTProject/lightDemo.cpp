@@ -395,6 +395,127 @@ GLuint setupShaders() {
 // Model loading and OpenGL setup
 //
 
+void initMap()
+{
+	SceneElement element;
+
+	float amb[] = { 0.2f, 0.15f, 0.1f, 1.0f };
+	float diff[] = { 0.8f, 0.6f, 0.4f, 1.0f };
+	float spec[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	int texcount = 0;
+
+	float amb1[] = { 0.0f, 0.3f, 1.0f, 1.0f };
+	float diff1[] = { 0.1f, 0.1f, 0.8f, 1.0f };
+	float spec1[] = { 0.9f, 0.9f, 0.9f, 1.0f };
+	float shininess = 500.0;
+
+	// Water -------------------------------------------
+	element.mesh = createQuad(160.0F, 160.0F);
+	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 0.0F, 0.0F, 0.0F };
+	element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
+	myElements.push_back(element);
+
+	// Obstacles ----------------------------------------
+	shininess = 100.0f;
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { -1.0F, 0.0F, 0.0F }; //Starting position
+	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { -1.0F, 0.0F, 5.0F }; //Starting position
+	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 5.0F, 0.0F, -3.0F }; //Starting position
+	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 5.0F, 0.0F, 2.0F }; //Starting position
+	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 13.0F, 0.0F, 0.0F }; //Starting position
+	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	myElements.push_back(element);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 12.0F, 0.0F, 5.0F }; //Starting position
+	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	myElements.push_back(element);
+
+
+	// Houses ------------------------------------------
+	element.mesh = createCube();
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 3.0F, 0.0F, 7.0F }; //Starting position
+	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	myElements.push_back(element);
+
+	element.mesh = createCube();
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 10.0F, 0.0F, -9.0F }; //Starting position
+	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	myElements.push_back(element);
+}
+
 void init()
 {
 	SceneElement element;
@@ -414,13 +535,6 @@ void init()
 	cameras[1] = Camera(0, 20.0F, 0.0F, 90.0F);
 	cameras[2] = Camera(1, 20.0F, 0.0F, 90.0F);
 	
-	float amb[]= {0.2f, 0.15f, 0.1f, 1.0f};
-	float diff[] = {0.8f, 0.6f, 0.4f, 1.0f};
-	float spec[] = {0.8f, 0.8f, 0.8f, 1.0f};
-	float emissive[] = {0.0f, 0.0f, 0.0f, 1.0f};
-	float shininess= 100.0f;
-	int texcount = 0;
-
 	// create geometry and VAO of the pawn
 	/*
 	element.mesh = createPawn();
@@ -445,22 +559,8 @@ void init()
 	element.translation = { 2, 0, 1 }; //Starting position
 	myElements.push_back(element);
 	*/
-	float amb1[]= {0.0f, 0.3f, 1.0f, 1.0f};
-	float diff1[] = {0.1f, 0.1f, 0.8f, 1.0f};
-	float spec1[] = {0.9f, 0.9f, 0.9f, 1.0f};
-	shininess=500.0;
+	
 	/*
-	// create geometry and VAO of the cylinder
-	element.mesh = createCylinder(1.5f, 0.5f, 20);
-	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 1, 0, 1 }; //Starting position
-	myElements.push_back(element);
-
 	// create geometry and VAO of the 
 	element.mesh = createCone(1.5f, 0.5f, 20);
 	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
@@ -471,109 +571,9 @@ void init()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 0, 0, 1 }; //Starting position
 	myElements.push_back(element);
-	
-	element.mesh = createCube();
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 1, 0, 0 }; //Starting position
-	myElements.push_back(element);
 	*/
-	element.mesh = createQuad(80.0F, 80.0F);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = {0.0F, 0.0F, 0.0F};
-	element.rotation = {-90.0F, 1.0F, 0.0F, 0.0F};
-	myElements.push_back(element);
-	//meshRotationDirection.push_back({ 1.0f, 0.0f, 0.0f });
-	//meshRotationAngle.push_back(90.0f);
 
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { -1.0F, 0.0F, 0.0F }; //Starting position
-	myElements.push_back(element);
-
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { -1.0F, 0.0F, 5.0F }; //Starting position
-	myElements.push_back(element);
-
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 5.0F, 0.0F, -3.0F }; //Starting position
-	myElements.push_back(element);
-
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 5.0F, 0.0F, 2.0F }; //Starting position
-	myElements.push_back(element);
-
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 13.0F, 0.0F, 0.0F }; //Starting position
-	myElements.push_back(element);
-
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = {12.0F, 0.0F, 5.0F}; //Starting position
-	myElements.push_back(element);
-
-	element.mesh = createCube();
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 3.0F, 0.0F, 7.0F }; //Starting position
-	myElements.push_back(element);
-
-	element.mesh = createCube();
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 10.0F, 0.0F, -9.0F }; //Starting position
-	myElements.push_back(element);
+	initMap();
 
 
 	// some GL settings

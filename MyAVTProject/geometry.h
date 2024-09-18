@@ -24,9 +24,9 @@ struct MyMesh {
 
 struct SceneElement {
 	struct MyMesh mesh;
-	std::vector<float> translation;
-	std::vector<float> scale;
-	std::vector<float> rotation;
+	std::vector<float> translation = { 0.0F, 0.0F, 0.0F};
+	std::vector<float> scale = { 1.0F, 1.0F, 1.0F};
+	std::vector<float> rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 };
 
 MyMesh createCube();
