@@ -32,6 +32,7 @@
 #include "VertexAttrDef.h"
 #include "geometry.h"
 #include "camera.h"
+#include "boat.h"
 
 #include "avtFreeType.h"
 
@@ -52,6 +53,7 @@ const string font_name = "fonts/arial.ttf";
 
 //Vector with meshes
 vector<struct SceneElement> myElements;
+Boat boat;
 
 //External array storage defined in AVTmathLib.cpp
 
@@ -95,6 +97,26 @@ void timer(int value)
 
 void refresh(int value)
 {
+	float deltaTime = 1.0F / 60.0F;
+	for (int i = 0; i < myElements[boat.elementNum].translation.size(); i++) {
+		myElements[boat.elementNum].translation[i] += boat.speed * boat.direction[i] * deltaTime;
+	}
+	for (float& n : myElements[boat.elementNum].translation) {
+		std::cout << n << std::endl;
+	}
+	//myElements[boat.elementNum].translation += boat.direction * boat.speed * deltaTime;
+	if (boat.speed > 0.0F) {
+		boat.speed *= boat.speedDecay;
+		//boat.speed = std::max(boat.speed - boat.speedDecay, 0.0F); // experiment boat.speed *= decay
+	}
+
+	cameras[activeCamera].target[0] = myElements[boat.elementNum].translation[0];
+	cameras[activeCamera].target[1] = myElements[boat.elementNum].translation[1];
+	cameras[activeCamera].target[2] = myElements[boat.elementNum].translation[2];
+	// boat.pos += boat.speed * boat.direction * deltaTime
+	// if boat.speed > 0:
+	//    boat.speed -= decay
+
 	glutPostRedisplay();
 	glutTimerFunc(1000/60, refresh, 0);
 }
@@ -112,6 +134,8 @@ void changeSize(int w, int h) {
 	// set the viewport to be the entire window
 	glViewport(0, 0, w, h);
 	// set the projection matrix
+	// glGetInteger(GL_VIEWPORT, m_view)
+	// float ratio = (m_view[2] - m_view[0))/(m_view[3] - m_view[1])
 	ratio = (1.0f * w) / h;
 	cameras[activeCamera].updateProjectionMatrix(ratio);
 }
@@ -236,6 +260,20 @@ void processKeys(unsigned char key, int xx, int yy)
 			activeCamera = 2; 
 			cameras[activeCamera].updateProjectionMatrix(ratio);
 			break;
+	}
+
+	if (key == 'd') {
+		boat.increaseSpeed(0.4F);
+		myElements[boat.elementNum].rotation[0] -= 1.0F;
+		boat.setDirection(myElements[boat.elementNum].rotation);
+		//rotate(direction, -1)
+	}
+	if (key == 'a') {
+		boat.increaseSpeed(0.4F);
+		myElements[boat.elementNum].rotation[0] += 1.0F;
+		boat.setDirection(myElements[boat.elementNum].rotation);
+		//boat.direction = rotate() * boat.direction;
+		//rotate(direction, 1)
 	}
 }
 
@@ -516,6 +554,29 @@ void initMap()
 	myElements.push_back(element);
 }
 
+void initBoat() {
+	float amb[] = { 0.2f, 0.15f, 0.1f, 1.0f };
+	float diff[] = { 0.8f, 0.6f, 0.4f, 1.0f };
+	float spec[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	int texcount = 0;
+	float shininess = 100.0f;
+
+	SceneElement boat;
+
+	boat.mesh = createCube();
+	memcpy(boat.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(boat.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(boat.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(boat.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	boat.mesh.mat.shininess = shininess;
+	boat.mesh.mat.texCount = texcount;
+	boat.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	boat.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+
+	myElements.push_back(boat);
+}
+
 void init()
 {
 	SceneElement element;
@@ -573,8 +634,8 @@ void init()
 	myElements.push_back(element);
 	*/
 
+	initBoat();
 	initMap();
-
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
