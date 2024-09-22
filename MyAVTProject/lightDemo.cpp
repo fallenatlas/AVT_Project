@@ -101,9 +101,6 @@ void refresh(int value)
 	for (int i = 0; i < myElements[boat.elementNum].translation.size(); i++) {
 		myElements[boat.elementNum].translation[i] += boat.speed * boat.direction[i] * deltaTime;
 	}
-	for (float& n : myElements[boat.elementNum].translation) {
-		std::cout << n << std::endl;
-	}
 	//myElements[boat.elementNum].translation += boat.direction * boat.speed * deltaTime;
 	if (boat.speed > 0.0F) {
 		boat.speed *= boat.speedDecay;
