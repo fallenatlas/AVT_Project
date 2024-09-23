@@ -97,6 +97,12 @@ ScenegraphNode house2_node;
 ScenegraphNode boat_node;
 ScenegraphNode boat_part1_node;
 ScenegraphNode boat_part2_node;
+ScenegraphNode left_paddle_node;
+ScenegraphNode left_paddle_part1_node;
+ScenegraphNode left_paddle_part2_node;
+ScenegraphNode right_paddle_node;
+ScenegraphNode right_paddle_part1_node;
+ScenegraphNode right_paddle_part2_node;
 
 // Scene Elements
 SceneElement water_element;
@@ -111,6 +117,12 @@ SceneElement house2_element;
 SceneElement boat_element;
 SceneElement boat_part1_element;
 SceneElement boat_part2_element;
+SceneElement left_paddle_element;
+SceneElement left_paddle_part1_element;
+SceneElement left_paddle_part2_element;
+SceneElement right_paddle_element;
+SceneElement right_paddle_part1_element;
+SceneElement right_paddle_part2_element;
 
 
 void timer(int value)
@@ -600,6 +612,76 @@ void initBoat() {
 	boat_part1_element.scale = { (float)sqrt(0.5), 0.5F, (float)sqrt(0.5), 0.0F};
 	boat_part1_node = ScenegraphNode(0, &boat_part1_element, &shader);
 	boat_node.addNode(&boat_part1_node);
+
+	// Left paddle as a whole
+	left_paddle_element.translation = { 1.2F, 0.3F, 1.0F }; //Starting position
+	left_paddle_element.rotation = { 0.0F, 1.0F, 0.0F, 0.0F };
+	left_paddle_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	left_paddle_node = ScenegraphNode(0, &left_paddle_element, &shader);
+	boat_node.addNode(&left_paddle_node);
+
+	// Left paddle stick
+	left_paddle_part1_element.mesh = createCylinder(1.5f, 0.05f, 20);
+	memcpy(left_paddle_part1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(left_paddle_part1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(left_paddle_part1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(left_paddle_part1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	left_paddle_part1_element.mesh.mat.shininess = shininess;
+	left_paddle_part1_element.mesh.mat.texCount = texcount;
+	left_paddle_part1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	left_paddle_part1_element.rotation = { 45.0F, 0.0F, 0.0F, 1.0F };
+	left_paddle_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	left_paddle_part1_node = ScenegraphNode(0, &left_paddle_part1_element, &shader);
+	left_paddle_node.addNode(&left_paddle_part1_node);
+
+	// Left paddle head
+	left_paddle_part2_element.mesh = createCylinder(0.1f, 0.3f, 20);
+	memcpy(left_paddle_part2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(left_paddle_part2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(left_paddle_part2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(left_paddle_part2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	left_paddle_part2_element.mesh.mat.shininess = shininess;
+	left_paddle_part2_element.mesh.mat.texCount = texcount;
+	left_paddle_part2_element.translation = { 0.424F, -0.424F, 0.0F }; //Starting position
+	left_paddle_part2_element.rotation = { -245.0F, -1.0F, -0.5F, 1.0F };
+	left_paddle_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	left_paddle_part2_node = ScenegraphNode(0, &left_paddle_part2_element, &shader);
+	left_paddle_node.addNode(&left_paddle_part2_node);
+
+	// Right paddle as a whole
+	right_paddle_element.translation = { -0.2F, 0.3F, 1.0F }; //Starting position
+	right_paddle_element.rotation = { 0.0F, 1.0F, 0.0F, 0.0F };
+	right_paddle_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	right_paddle_node = ScenegraphNode(0, &right_paddle_element, &shader);
+	boat_node.addNode(&right_paddle_node);
+
+	// Right paddle stick
+	right_paddle_part1_element.mesh = createCylinder(1.5f, 0.05f, 20);
+	memcpy(right_paddle_part1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(right_paddle_part1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(right_paddle_part1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(right_paddle_part1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	right_paddle_part1_element.mesh.mat.shininess = shininess;
+	right_paddle_part1_element.mesh.mat.texCount = texcount;
+	right_paddle_part1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	right_paddle_part1_element.rotation = { -45.0F, 0.0F, 0.0F, 1.0F };
+	right_paddle_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	right_paddle_part1_node = ScenegraphNode(0, &right_paddle_part1_element, &shader);
+	right_paddle_node.addNode(&right_paddle_part1_node);
+
+	// Right paddle head
+	right_paddle_part2_element.mesh = createCylinder(0.1f, 0.3f, 20);
+	memcpy(right_paddle_part2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(right_paddle_part2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(right_paddle_part2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(right_paddle_part2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	right_paddle_part2_element.mesh.mat.shininess = shininess;
+	right_paddle_part2_element.mesh.mat.texCount = texcount;
+	right_paddle_part2_element.translation = { -0.424F, -0.424F, 0.0F }; //Starting position
+	right_paddle_part2_element.rotation = { 245.0F, 1.0F, -0.5F, 1.0F };
+	right_paddle_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	right_paddle_part2_node = ScenegraphNode(0, &right_paddle_part2_element, &shader);
+	right_paddle_node.addNode(&right_paddle_part2_node);
 }
 
 void init()
