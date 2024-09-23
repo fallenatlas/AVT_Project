@@ -177,6 +177,30 @@ void refresh(int value)
 	cameras[activeCamera].target[0] = boat_element.translation[0];
 	cameras[activeCamera].target[1] = boat_element.translation[1];
 	cameras[activeCamera].target[2] = boat_element.translation[2];
+
+	for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
+		// modify per thingy
+		float perpVector[3] = { boat.direction[2], 0.0F, -boat.direction[0] };
+		float modifier = 0.0f;
+		if (i == 1) {
+			modifier = 1.0f;
+		}
+
+		for (int j = 0; j < 3; j++) {
+			spotLightPos[i][j] = boat_element.translation[j] + boat.direction[j] * 0.0F + perpVector[j] * modifier;
+		}
+		spotLightPos[i][1] += 0.5F;
+		spotLightPos[i][3] = 1.0f;
+	}
+
+	for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
+		for (int j = 0; j < 3; j++) {
+			spotLightDir[i][j] = boat.direction[j];
+		}
+		spotLightDir[i][3] = 0.0f;
+	}
+	
+
 	// boat.pos += boat.speed * boat.direction * deltaTime
 	// if boat.speed > 0:
 	//    boat.speed -= decay
@@ -211,6 +235,8 @@ void changeSize(int w, int h) {
 //
 
 void renderScene(void) {
+
+	GLint loc;
 
 	FrameCount++;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
