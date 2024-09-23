@@ -277,15 +277,16 @@ void processKeys(unsigned char key, int xx, int yy)
 		std::vector<float> rotation = { -1.0F, 0, 0, 0 };
 		boat_node.spin(rotation);
 		boat.setDirection(boat_element.rotation);
-		//rotate(direction, -1)
+		rotation = { boat.speed * 1.0F, 0, 0, 0 };
+		right_paddle_node.spin(rotation);
 	}
 	if (key == 'a') {
 		boat.increaseSpeed(0.4F);
 		std::vector<float> rotation = { 1.0F, 0, 0, 0 };
 		boat_node.spin(rotation);
 		boat.setDirection(boat_element.rotation);
-		//boat.direction = rotate() * boat.direction;
-		//rotate(direction, 1)
+		rotation = { boat.speed * 1.0F, 0, 0, 0 };
+		left_paddle_node.spin(rotation);
 	}
 }
 
