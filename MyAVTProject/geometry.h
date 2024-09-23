@@ -1,3 +1,5 @@
+#include <vector>
+#include "GL/glew.h"
 
 #define MAX_TEXTURES 8
 

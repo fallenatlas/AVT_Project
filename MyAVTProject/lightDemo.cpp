@@ -30,8 +30,8 @@
 #include "VSShaderlib.h"
 #include "AVTmathLib.h"
 #include "VertexAttrDef.h"
-#include "geometry.h"
 #include "camera.h"
+#include "Scenegraph.hpp"
 
 #include "avtFreeType.h"
 
@@ -46,6 +46,8 @@ unsigned int FrameCount = 0;
 //shaders
 VSShaderLib shader;  //geometry
 VSShaderLib shaderText;  //render bitmap text
+
+Scenegraph scenegraph;
 
 //File with the font
 const string font_name = "fonts/arial.ttf";
@@ -124,8 +126,6 @@ void changeSize(int w, int h) {
 
 void renderScene(void) {
 
-	GLint loc;
-
 	FrameCount++;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// load identity matrices
@@ -146,38 +146,8 @@ void renderScene(void) {
 		multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
 		glUniform4fv(lPos_uniformId, 1, res);
 
-	//int objId=0; //id of the object mesh - to be used as index of mesh: Mymeshes[objID] means the current mesh
 
-	for each (struct SceneElement element in myElements) {
-		// send the material
-		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
-		glUniform4fv(loc, 1, element.mesh.mat.ambient);
-		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
-		glUniform4fv(loc, 1, element.mesh.mat.diffuse);
-		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
-		glUniform4fv(loc, 1, element.mesh.mat.specular);
-		loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
-		glUniform1f(loc, element.mesh.mat.shininess);
-		pushMatrix(MODEL);
-		translate(MODEL, element.translation);
-		rotate(MODEL, element.rotation);
-
-		// send matrices to OGL
-		computeDerivedMatrix(PROJ_VIEW_MODEL);
-		glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
-		glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
-		computeNormalMatrix3x3();
-		glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
-
-		// Render mesh
-		glBindVertexArray(element.mesh.vao);
-			
-		glDrawElements(element.mesh.type, element.mesh.numIndexes, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
-
-		popMatrix(MODEL);
-
-	}
+	scenegraph.draw();
 
 	//Render text (bitmap fonts) in screen coordinates. So use ortoghonal projection with viewport coordinates.
 	glDisable(GL_DEPTH_TEST);
@@ -364,10 +334,6 @@ GLuint setupShaders() {
 		exit(1);
 	}
 
-	pvm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_pvm");
-	vm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_viewModel");
-	normal_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_normal");
-	lPos_uniformId = glGetUniformLocation(shader.getProgramIndex(), "l_pos");
 	tex_loc = glGetUniformLocation(shader.getProgramIndex(), "texmap");
 	tex_loc1 = glGetUniformLocation(shader.getProgramIndex(), "texmap1");
 	tex_loc2 = glGetUniformLocation(shader.getProgramIndex(), "texmap2");
@@ -395,10 +361,20 @@ GLuint setupShaders() {
 // Model loading and OpenGL setup
 //
 
+ScenegraphNode water_node;
+ScenegraphNode ob1_node;
+ScenegraphNode ob2_node;
+ScenegraphNode ob3_node;
+ScenegraphNode ob4_node;
+ScenegraphNode ob5_node;
+ScenegraphNode ob6_node;
+ScenegraphNode house1_node;
+ScenegraphNode house2_node;
+
 void initMap()
 {
 	SceneElement element;
-
+	
 	float amb[] = { 0.2f, 0.15f, 0.1f, 1.0f };
 	float diff[] = { 0.8f, 0.6f, 0.4f, 1.0f };
 	float spec[] = { 0.8f, 0.8f, 0.8f, 1.0f };
@@ -420,8 +396,9 @@ void initMap()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 0.0F, 0.0F, 0.0F };
 	element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
-	myElements.push_back(element);
-
+	water_node = ScenegraphNode(0, element, &shader);
+	scenegraph.addNode(&water_node);
+	
 	// Obstacles ----------------------------------------
 	shininess = 100.0f;
 
@@ -434,7 +411,8 @@ void initMap()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { -1.0F, 0.0F, 0.0F }; //Starting position
 	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	myElements.push_back(element);
+	ob1_node = ScenegraphNode(0, element, &shader);
+	scenegraph.addNode(&ob1_node);
 
 	element.mesh = createCylinder(2.0f, 0.4f, 20);
 	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
@@ -445,18 +423,8 @@ void initMap()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { -1.0F, 0.0F, 5.0F }; //Starting position
 	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	myElements.push_back(element);
-
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 5.0F, 0.0F, -3.0F }; //Starting position
-	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	myElements.push_back(element);
+	ob2_node = ScenegraphNode(0, element, &shader);
+	scenegraph.addNode(&ob2_node);
 
 	element.mesh = createCylinder(2.0f, 0.4f, 20);
 	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
@@ -467,7 +435,8 @@ void initMap()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 5.0F, 0.0F, 2.0F }; //Starting position
 	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	myElements.push_back(element);
+	ob3_node = ScenegraphNode(0, element, &shader);
+	scenegraph.addNode(&ob3_node);
 
 	element.mesh = createCylinder(2.0f, 0.4f, 20);
 	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
@@ -478,7 +447,8 @@ void initMap()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 13.0F, 0.0F, 0.0F }; //Starting position
 	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	myElements.push_back(element);
+	ob4_node = ScenegraphNode(0, element, &shader);
+	scenegraph.addNode(&ob4_node);
 
 	element.mesh = createCylinder(2.0f, 0.4f, 20);
 	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
@@ -489,7 +459,20 @@ void initMap()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 12.0F, 0.0F, 5.0F }; //Starting position
 	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	myElements.push_back(element);
+	ob5_node = ScenegraphNode(0, element, &shader);
+	scenegraph.addNode(&ob5_node);
+
+	element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	element.mesh.mat.shininess = shininess;
+	element.mesh.mat.texCount = texcount;
+	element.translation = { 5.0F, 0.0F, -3.0F }; //Starting position
+	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	ob6_node = ScenegraphNode(0, element, &shader);
+	scenegraph.addNode(&ob6_node);
 
 
 	// Houses ------------------------------------------
@@ -502,7 +485,8 @@ void initMap()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 3.0F, 0.0F, 7.0F }; //Starting position
 	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	myElements.push_back(element);
+	house1_node = ScenegraphNode(0, element, &shader);
+	scenegraph.addNode(&house1_node);
 
 	element.mesh = createCube();
 	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
@@ -513,7 +497,8 @@ void initMap()
 	element.mesh.mat.texCount = texcount;
 	element.translation = { 10.0F, 0.0F, -9.0F }; //Starting position
 	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	myElements.push_back(element);
+	house2_node = ScenegraphNode(0, element, &shader);
+	scenegraph.addNode(&house2_node);
 }
 
 void init()

@@ -163,6 +163,8 @@
     <ClCompile Include="AVTmathLib.cpp" />
     <ClCompile Include="basic_geometry.cpp" />
     <ClCompile Include="lightDemo.cpp" />
+    <ClCompile Include="Scenegraph.cpp" />
+    <ClCompile Include="ScenegraphNode.cpp" />
     <ClCompile Include="Texture_Loader.cpp" />
     <ClCompile Include="vsShaderLib.cpp" />
   </ItemGroup>
@@ -173,6 +175,8 @@
     <ClInclude Include="cube.h" />
     <ClInclude Include="ft2build.h" />
     <ClInclude Include="geometry.h" />
+    <ClInclude Include="Scenegraph.hpp" />
+    <ClInclude Include="ScenegraphNode.hpp" />
     <ClInclude Include="Texture_Loader.h" />
     <ClInclude Include="VertexAttrDef.h" />
     <ClInclude Include="vsShaderLib.h" />

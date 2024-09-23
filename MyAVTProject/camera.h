@@ -1,3 +1,6 @@
+#ifndef CAMERA_H
+#define CAMERA_H
+
 #include <vector>
 
 class Camera {
@@ -41,3 +44,5 @@ public:
 			ortho(-80.0F, 80.0F, -80.0F/ratio, 80.0F/ratio, 0.1F, 50.0F);
 	}
 };
+
+#endif
