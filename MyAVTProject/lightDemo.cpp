@@ -39,6 +39,8 @@
 using namespace std;
 
 #define CAPTION "AVT Demo: Phong Shading and Text rendered with FreeType"
+#define NUM_POINT_LIGHTS 6
+#define NUM_SPOT_LIGHTS 2
 int WindowHandle = 0;
 int WinX = 1024, WinY = 768;
 
@@ -82,7 +84,27 @@ int startX, startY, tracking = 0;
 // Frame counting and FPS computation
 long myTime,timebase = 0,frame = 0;
 char s[32];
-float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};
+
+// Lights
+//float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};
+
+float directionalLightDir[4]{ 1.0f, 1000.0f, 1.0f, 0.0f };
+float pointLightPos[NUM_POINT_LIGHTS][4]{
+	{ -1.0F, 1.5F, 0.0F, 1.0F },
+	{ -1.0F, 1.5F, 5.0F, 1.0F },
+	{ 5.0F, 1.5F, -3.0F, 1.0F },
+	{ 5.0F, 1.5F, 2.0F, 1.0F },
+	{ 13.0F, 1.5F, 0.0F, 1.0F },
+	{ 12.0F, 1.5F, 5.0F, 1.0F }
+};
+float spotLightPos[NUM_SPOT_LIGHTS][4]{
+	{ 0.0F, 1.0F, 0.0F, 1.0F },
+	{ 0.5F, 1.0F, 0.0F, 1.0F }
+}; // need to be going with the car
+float spotLightDir[NUM_SPOT_LIGHTS][4]{
+	{ 0.0F, 0.0F, 1.0F, 0.0F },
+	{ 0.0F, 0.0F, 1.0F, 0.0F }
+};// need to be point in the direction of the car
 
 // Scene Nodes
 ScenegraphNode water_node;
@@ -207,8 +229,54 @@ void renderScene(void) {
 		//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
 
 		float res[4];
-		multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
-		glUniform4fv(lPos_uniformId, 1, res);
+		//multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
+		//glUniform4fv(lPos_uniformId, 1, res);
+
+		multMatrixPoint(VIEW, directionalLightDir, res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "dirLight.position");
+		glUniform4fv(loc, 1, res);
+
+		multMatrixPoint(VIEW, pointLightPos[0], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[0].position");
+		glUniform4fv(loc, 1, res);
+
+		multMatrixPoint(VIEW, pointLightPos[1], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[1].position");
+		glUniform4fv(loc, 1, res);
+
+		multMatrixPoint(VIEW, pointLightPos[2], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[2].position");
+		glUniform4fv(loc, 1, res);
+
+		multMatrixPoint(VIEW, pointLightPos[3], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[3].position");
+		glUniform4fv(loc, 1, res);
+
+		multMatrixPoint(VIEW, pointLightPos[4], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[4].position");
+		glUniform4fv(loc, 1, res);
+
+		multMatrixPoint(VIEW, pointLightPos[5], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[5].position");
+		glUniform4fv(loc, 1, res);
+
+		multMatrixPoint(VIEW, spotLightPos[0], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[0].position");
+		glUniform4fv(loc, 1, res);
+		multMatrixPoint(VIEW, spotLightDir[0], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[0].direction");
+		glUniform4fv(loc, 1, res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[0].cutOff");
+		glUniform1f(loc, cos(12.5f * 3.14f / 180.0f));
+
+		multMatrixPoint(VIEW, spotLightPos[1], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[1].position");
+		glUniform4fv(loc, 1, res);
+		multMatrixPoint(VIEW, spotLightDir[0], res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[1].direction");
+		glUniform4fv(loc, 1, res);
+		loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[1].cutOff");
+		glUniform1f(loc, cos(12.5f * 3.14f / 180.0f));
 
 
 	scenegraph.draw();
@@ -397,8 +465,8 @@ GLuint setupShaders() {
 
 	// Shader for models
 	shader.init();
-	shader.loadShader(VSShaderLib::VERTEX_SHADER, "shaders/pointlight_gourand.vert");
-	shader.loadShader(VSShaderLib::FRAGMENT_SHADER, "shaders/pointlight_gourand.frag");
+	shader.loadShader(VSShaderLib::VERTEX_SHADER, "shaders/phong_lighting.vert");
+	shader.loadShader(VSShaderLib::FRAGMENT_SHADER, "shaders/phong_lighting.frag");
 
 	// set semantics for the shader variables
 	glBindFragDataLocation(shader.getProgramIndex(), 0,"colorOut");

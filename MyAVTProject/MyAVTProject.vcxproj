@@ -184,6 +184,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies.exe" />
+    <None Include="shaders\phong_lighting.frag" />
+    <None Include="shaders\phong_lighting.vert" />
     <None Include="shaders\pointlight_gourand.frag" />
     <None Include="shaders\pointlight_gourand.vert" />
     <None Include="shaders\pointlight_phong.frag" />
