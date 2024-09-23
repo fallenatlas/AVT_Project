@@ -16,9 +16,12 @@ void Scenegraph::addNode(ScenegraphNode* node) {
 
 void Scenegraph::draw() {
   glStencilMask(0xFF);  // Enable writing to the stencil buffer
+ 
   for (unsigned int i = 0; i < Nodes.size(); i++) {
+    loadIdentity(MODEL);
     Nodes[i]->draw();
   }
+  
   glStencilMask(0x00);
 }
 

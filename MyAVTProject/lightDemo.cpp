@@ -95,6 +95,8 @@ ScenegraphNode ob6_node;
 ScenegraphNode house1_node;
 ScenegraphNode house2_node;
 ScenegraphNode boat_node;
+ScenegraphNode boat_part1_node;
+ScenegraphNode boat_part2_node;
 
 // Scene Elements
 SceneElement water_element;
@@ -107,6 +109,8 @@ SceneElement ob6_element;
 SceneElement house1_element;
 SceneElement house2_element;
 SceneElement boat_element;
+SceneElement boat_part1_element;
+SceneElement boat_part2_element;
 
 
 void timer(int value)
@@ -258,13 +262,15 @@ void processKeys(unsigned char key, int xx, int yy)
 
 	if (key == 'd') {
 		boat.increaseSpeed(0.4F);
-		boat_element.rotation[0] -= 1.0F;
+		std::vector<float> rotation = { -1.0F, 0, 0, 0 };
+		boat_node.spin(rotation);
 		boat.setDirection(boat_element.rotation);
 		//rotate(direction, -1)
 	}
 	if (key == 'a') {
 		boat.increaseSpeed(0.4F);
-		boat_element.rotation[0] += 1.0F;
+		std::vector<float> rotation = { 1.0F, 0, 0, 0 };
+		boat_node.spin(rotation);
 		boat.setDirection(boat_element.rotation);
 		//boat.direction = rotate() * boat.direction;
 		//rotate(direction, 1)
@@ -559,18 +565,41 @@ void initBoat() {
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	int texcount = 0;
 	float shininess = 100.0f;
-	
-	boat_element.mesh = createCube();
-	memcpy(boat_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(boat_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(boat_element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(boat_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	boat_element.mesh.mat.shininess = shininess;
-	boat_element.mesh.mat.texCount = texcount;
+
+	// Boat as a whole
 	boat_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
 	boat_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	boat_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	boat_node = ScenegraphNode(0, &boat_element, &shader);
 	scenegraph.addNode(&boat_node);
+
+	// Boat Body
+	boat_part2_element.mesh = createCube();
+	memcpy(boat_part2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(boat_part2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(boat_part2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(boat_part2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	boat_part2_element.mesh.mat.shininess = shininess;
+	boat_part2_element.mesh.mat.texCount = texcount;
+	boat_part2_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	boat_part2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	boat_part2_element.scale = { 1.0F, 0.5F, 2.0F, 0.0F};
+	boat_part2_node = ScenegraphNode(0, &boat_part2_element, &shader);
+	boat_node.addNode(&boat_part2_node);
+
+	// Boad Head
+	boat_part1_element.mesh = createCube();
+	memcpy(boat_part1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(boat_part1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(boat_part1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(boat_part1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	boat_part1_element.mesh.mat.shininess = shininess;
+	boat_part1_element.mesh.mat.texCount = texcount;
+	boat_part1_element.translation = { 0.0F, 0.0F, 2.0F }; //Starting position
+	boat_part1_element.rotation = { 45.0F, 0.0F, 1.0F, 0.0F };
+	boat_part1_element.scale = { (float)sqrt(0.5), 0.5F, (float)sqrt(0.5), 0.0F};
+	boat_part1_node = ScenegraphNode(0, &boat_part1_element, &shader);
+	boat_node.addNode(&boat_part1_node);
 }
 
 void init()

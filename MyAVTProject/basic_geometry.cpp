@@ -29,6 +29,7 @@ MyMesh createQuad(float size_x, float size_y) {
 	int i;
 	float vert[16];
 	MyMesh amesh;
+	amesh.isValid = true;
 	amesh.numIndexes = 2*3;
 
 	memcpy(vert, quad_vertices, sizeof(float) * 16);
@@ -70,6 +71,7 @@ MyMesh createQuad(float size_x, float size_y) {
 MyMesh createCube() {
 
 	MyMesh amesh;
+	amesh.isValid = true;
 	amesh.numIndexes = faceCount *3;
 
 	glGenVertexArrays(1, &(amesh.vao));
@@ -359,6 +361,7 @@ MyMesh computeVAO(int numP, float *p, float *points, int sides, float smoothCos)
 	}
 
 	MyMesh amesh;
+	amesh.isValid = true;
 	amesh.numIndexes = count;
 
 

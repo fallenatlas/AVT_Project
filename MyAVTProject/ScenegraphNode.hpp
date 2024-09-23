@@ -18,8 +18,6 @@ class ScenegraphNode {
     ScenegraphNode();
     ScenegraphNode(int id, SceneElement* element, VSShaderLib* shader);
     ~ScenegraphNode();
-    std::vector<float> getRotationMatrix();
-    std::vector<float> getTranslationVector();
     std::vector<ScenegraphNode*> getChildren();
 
     void draw();

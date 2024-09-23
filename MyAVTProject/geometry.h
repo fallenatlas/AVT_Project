@@ -22,6 +22,7 @@ struct MyMesh {
 		GLuint numIndexes;
 		unsigned int type;
 		struct Material mat;
+		bool isValid = false;
 	};
 
 struct SceneElement {
