@@ -18,7 +18,7 @@ class Scenegraph {
     void addNode(ScenegraphNode* node);
     void draw();
 
-    std::vector<ScenegraphNode*> getNodes();
+    ScenegraphNode* getNode(int id);
 
   
   private:

@@ -22,6 +22,6 @@ void Scenegraph::draw() {
   glStencilMask(0x00);
 }
 
-std::vector<ScenegraphNode*> Scenegraph::getNodes() {
-    return Nodes;
+ScenegraphNode* Scenegraph::getNode(int id) {
+    return Nodes[id];
 }

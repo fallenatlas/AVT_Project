@@ -32,6 +32,7 @@
 #include "VertexAttrDef.h"
 #include "camera.h"
 #include "Scenegraph.hpp"
+#include "boat.h"
 
 #include "avtFreeType.h"
 
@@ -53,7 +54,7 @@ Scenegraph scenegraph;
 const string font_name = "fonts/arial.ttf";
 
 //Vector with meshes
-vector<struct SceneElement> myElements;
+Boat boat;
 
 //External array storage defined in AVTmathLib.cpp
 
@@ -83,6 +84,30 @@ long myTime,timebase = 0,frame = 0;
 char s[32];
 float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};
 
+// Scene Nodes
+ScenegraphNode water_node;
+ScenegraphNode ob1_node;
+ScenegraphNode ob2_node;
+ScenegraphNode ob3_node;
+ScenegraphNode ob4_node;
+ScenegraphNode ob5_node;
+ScenegraphNode ob6_node;
+ScenegraphNode house1_node;
+ScenegraphNode house2_node;
+ScenegraphNode boat_node;
+
+// Scene Elements
+SceneElement water_element;
+SceneElement ob1_element;
+SceneElement ob2_element;
+SceneElement ob3_element;
+SceneElement ob4_element;
+SceneElement ob5_element;
+SceneElement ob6_element;
+SceneElement house1_element;
+SceneElement house2_element;
+SceneElement boat_element;
+
 
 void timer(int value)
 {
@@ -97,6 +122,27 @@ void timer(int value)
 
 void refresh(int value)
 {
+	float deltaTime = 1.0F / 60.0F;
+	std::vector<float> movement{ 0.0F, 0.0F, 0.0F };
+
+	for (int i = 0; i < boat_element.translation.size(); i++) {
+		movement[i] = boat.speed * boat.direction[i] * deltaTime;
+	}
+	boat_node.move(movement);
+
+	//myElements[boat.elementNum].translation += boat.direction * boat.speed * deltaTime;
+	if (boat.speed > 0.0F) {
+		boat.speed *= boat.speedDecay;
+		//boat.speed = std::max(boat.speed - boat.speedDecay, 0.0F); // experiment boat.speed *= decay
+	}
+
+	cameras[activeCamera].target[0] = boat_element.translation[0];
+	cameras[activeCamera].target[1] = boat_element.translation[1];
+	cameras[activeCamera].target[2] = boat_element.translation[2];
+	// boat.pos += boat.speed * boat.direction * deltaTime
+	// if boat.speed > 0:
+	//    boat.speed -= decay
+
 	glutPostRedisplay();
 	glutTimerFunc(1000/60, refresh, 0);
 }
@@ -114,6 +160,8 @@ void changeSize(int w, int h) {
 	// set the viewport to be the entire window
 	glViewport(0, 0, w, h);
 	// set the projection matrix
+	// glGetInteger(GL_VIEWPORT, m_view)
+	// float ratio = (m_view[2] - m_view[0))/(m_view[3] - m_view[1])
 	ratio = (1.0f * w) / h;
 	cameras[activeCamera].updateProjectionMatrix(ratio);
 }
@@ -206,6 +254,20 @@ void processKeys(unsigned char key, int xx, int yy)
 			activeCamera = 2; 
 			cameras[activeCamera].updateProjectionMatrix(ratio);
 			break;
+	}
+
+	if (key == 'd') {
+		boat.increaseSpeed(0.4F);
+		boat_element.rotation[0] -= 1.0F;
+		boat.setDirection(boat_element.rotation);
+		//rotate(direction, -1)
+	}
+	if (key == 'a') {
+		boat.increaseSpeed(0.4F);
+		boat_element.rotation[0] += 1.0F;
+		boat.setDirection(boat_element.rotation);
+		//boat.direction = rotate() * boat.direction;
+		//rotate(direction, 1)
 	}
 }
 
@@ -361,19 +423,8 @@ GLuint setupShaders() {
 // Model loading and OpenGL setup
 //
 
-ScenegraphNode water_node;
-ScenegraphNode ob1_node;
-ScenegraphNode ob2_node;
-ScenegraphNode ob3_node;
-ScenegraphNode ob4_node;
-ScenegraphNode ob5_node;
-ScenegraphNode ob6_node;
-ScenegraphNode house1_node;
-ScenegraphNode house2_node;
-
 void initMap()
 {
-	SceneElement element;
 	
 	float amb[] = { 0.2f, 0.15f, 0.1f, 1.0f };
 	float diff[] = { 0.8f, 0.6f, 0.4f, 1.0f };
@@ -385,120 +436,141 @@ void initMap()
 	float diff1[] = { 0.1f, 0.1f, 0.8f, 1.0f };
 	float spec1[] = { 0.9f, 0.9f, 0.9f, 1.0f };
 	float shininess = 500.0;
-
+	
 	// Water -------------------------------------------
-	element.mesh = createQuad(160.0F, 160.0F);
-	memcpy(element.mesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 0.0F, 0.0F, 0.0F };
-	element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
-	water_node = ScenegraphNode(0, element, &shader);
+	water_element.mesh = createQuad(160.0F, 160.0F);
+	memcpy(water_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(water_element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(water_element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(water_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	water_element.mesh.mat.shininess = shininess;
+	water_element.mesh.mat.texCount = texcount;
+	water_element.translation = { 0.0F, 0.0F, 0.0F };
+	water_element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
+	water_node = ScenegraphNode(1, &water_element, &shader);
 	scenegraph.addNode(&water_node);
 	
 	// Obstacles ----------------------------------------
 	shininess = 100.0f;
 
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { -1.0F, 0.0F, 0.0F }; //Starting position
-	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob1_node = ScenegraphNode(0, element, &shader);
+	ob1_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(ob1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(ob1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(ob1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	ob1_element.mesh.mat.shininess = shininess;
+	ob1_element.mesh.mat.texCount = texcount;
+	ob1_element.translation = { -1.0F, 0.0F, 0.0F }; //Starting position
+	ob1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	ob1_node = ScenegraphNode(2, &ob1_element, &shader);
 	scenegraph.addNode(&ob1_node);
 
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { -1.0F, 0.0F, 5.0F }; //Starting position
-	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob2_node = ScenegraphNode(0, element, &shader);
+	ob2_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(ob2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(ob2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(ob2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	ob2_element.mesh.mat.shininess = shininess;
+	ob2_element.mesh.mat.texCount = texcount;
+	ob2_element.translation = { -1.0F, 0.0F, 5.0F }; //Starting position
+	ob2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	ob2_node = ScenegraphNode(3, &ob2_element, &shader);
 	scenegraph.addNode(&ob2_node);
 
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 5.0F, 0.0F, 2.0F }; //Starting position
-	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob3_node = ScenegraphNode(0, element, &shader);
+	ob3_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(ob3_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(ob3_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(ob3_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob3_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	ob3_element.mesh.mat.shininess = shininess;
+	ob3_element.mesh.mat.texCount = texcount;
+	ob3_element.translation = { 5.0F, 0.0F, 2.0F }; //Starting position
+	ob3_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	ob3_node = ScenegraphNode(4, &ob3_element, &shader);
 	scenegraph.addNode(&ob3_node);
 
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 13.0F, 0.0F, 0.0F }; //Starting position
-	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob4_node = ScenegraphNode(0, element, &shader);
+	ob4_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(ob4_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(ob4_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(ob4_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob4_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	ob4_element.mesh.mat.shininess = shininess;
+	ob4_element.mesh.mat.texCount = texcount;
+	ob4_element.translation = { 13.0F, 0.0F, 0.0F }; //Starting position
+	ob4_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	ob4_node = ScenegraphNode(5, &ob4_element, &shader);
 	scenegraph.addNode(&ob4_node);
 
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 12.0F, 0.0F, 5.0F }; //Starting position
-	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob5_node = ScenegraphNode(0, element, &shader);
+	ob5_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(ob5_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(ob5_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(ob5_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob5_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	ob5_element.mesh.mat.shininess = shininess;
+	ob5_element.mesh.mat.texCount = texcount;
+	ob5_element.translation = { 12.0F, 0.0F, 5.0F }; //Starting position
+	ob5_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	ob5_node = ScenegraphNode(6, &ob5_element, &shader);
 	scenegraph.addNode(&ob5_node);
 
-	element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 5.0F, 0.0F, -3.0F }; //Starting position
-	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob6_node = ScenegraphNode(0, element, &shader);
+	ob6_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(ob6_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(ob6_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(ob6_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob6_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	ob6_element.mesh.mat.shininess = shininess;
+	ob6_element.mesh.mat.texCount = texcount;
+	ob6_element.translation = { 5.0F, 0.0F, -3.0F }; //Starting position
+	ob6_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	ob6_node = ScenegraphNode(7, &ob6_element, &shader);
 	scenegraph.addNode(&ob6_node);
 
 
 	// Houses ------------------------------------------
-	element.mesh = createCube();
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 3.0F, 0.0F, 7.0F }; //Starting position
-	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house1_node = ScenegraphNode(0, element, &shader);
+	house1_element.mesh = createCube();
+	memcpy(house1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(house1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(house1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(house1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	house1_element.mesh.mat.shininess = shininess;
+	house1_element.mesh.mat.texCount = texcount;
+	house1_element.translation = { 3.0F, 0.0F, 7.0F }; //Starting position
+	house1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	house1_node = ScenegraphNode(8, &house1_element, &shader);
 	scenegraph.addNode(&house1_node);
-
-	element.mesh = createCube();
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 10.0F, 0.0F, -9.0F }; //Starting position
-	element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house2_node = ScenegraphNode(0, element, &shader);
+	
+	house2_element.mesh = createCube();
+	memcpy(house2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(house2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(house2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(house2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	house2_element.mesh.mat.shininess = shininess;
+	house2_element.mesh.mat.texCount = texcount;
+	house2_element.translation = { 10.0F, 0.0F, -9.0F }; //Starting position
+	house2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	house2_node = ScenegraphNode(9, &house2_element, &shader);
 	scenegraph.addNode(&house2_node);
+}
+
+void initBoat() {
+	float amb[] = { 0.2f, 0.15f, 0.1f, 1.0f };
+	float diff[] = { 0.8f, 0.6f, 0.4f, 1.0f };
+	float spec[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	int texcount = 0;
+	float shininess = 100.0f;
+	
+	boat_element.mesh = createCube();
+	memcpy(boat_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(boat_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(boat_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(boat_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	boat_element.mesh.mat.shininess = shininess;
+	boat_element.mesh.mat.texCount = texcount;
+	boat_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	boat_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	boat_node = ScenegraphNode(0, &boat_element, &shader);
+	scenegraph.addNode(&boat_node);
 }
 
 void init()
@@ -558,8 +630,8 @@ void init()
 	myElements.push_back(element);
 	*/
 
+	initBoat();
 	initMap();
-
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);

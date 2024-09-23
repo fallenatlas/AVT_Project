@@ -5,7 +5,7 @@
 
 ScenegraphNode::ScenegraphNode() {}
 
-ScenegraphNode::ScenegraphNode(int id, SceneElement element, VSShaderLib* shader) {
+ScenegraphNode::ScenegraphNode(int id, SceneElement* element, VSShaderLib* shader) {
     ObjectId = id;
     Element = element;
     Shader = shader;
@@ -30,16 +30,16 @@ void ScenegraphNode::draw() {
     
     // send the material
     loc = glGetUniformLocation(Shader->getProgramIndex(), "mat.ambient");
-    glUniform4fv(loc, 1, Element.mesh.mat.ambient);
+    glUniform4fv(loc, 1, Element->mesh.mat.ambient);
     loc = glGetUniformLocation(Shader->getProgramIndex(), "mat.diffuse");
-    glUniform4fv(loc, 1, Element.mesh.mat.diffuse);
+    glUniform4fv(loc, 1, Element->mesh.mat.diffuse);
     loc = glGetUniformLocation(Shader->getProgramIndex(), "mat.specular");
-    glUniform4fv(loc, 1, Element.mesh.mat.specular);
+    glUniform4fv(loc, 1, Element->mesh.mat.specular);
     loc = glGetUniformLocation(Shader->getProgramIndex(), "mat.shininess");
-    glUniform1f(loc, Element.mesh.mat.shininess);
+    glUniform1f(loc, Element->mesh.mat.shininess);
     pushMatrix(MODEL);
-    translate(MODEL, Element.translation);
-    rotate(MODEL, Element.rotation);
+    translate(MODEL, Element->translation);
+    rotate(MODEL, Element->rotation);
 
     // send matrices to OGL
     computeDerivedMatrix(PROJ_VIEW_MODEL);
@@ -49,9 +49,9 @@ void ScenegraphNode::draw() {
     glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
 
     // Render mesh
-    glBindVertexArray(Element.mesh.vao);
+    glBindVertexArray(Element->mesh.vao);
         
-    glDrawElements(Element.mesh.type, Element.mesh.numIndexes, GL_UNSIGNED_INT, 0);
+    glDrawElements(Element->mesh.type, Element->mesh.numIndexes, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
     popMatrix(MODEL);
@@ -63,16 +63,16 @@ void ScenegraphNode::draw() {
 }
 
 void ScenegraphNode::move(std::vector<float> translation) {
-    Element.translation[0] += translation[0];
-    Element.translation[1] += translation[1];
-    Element.translation[3] += translation[2];
+    Element->translation[0] += translation[0];
+    Element->translation[1] += translation[1];
+    Element->translation[2] += translation[2];
     for (ScenegraphNode* node : Children) {
         node->move(translation);
     }
 }
 
 void ScenegraphNode::spin(std::vector<float> rotation) {
-    Element.rotation = rotation;
+    Element->rotation = rotation;
     for (ScenegraphNode* node : Children) {
         node->spin(rotation);
     }
