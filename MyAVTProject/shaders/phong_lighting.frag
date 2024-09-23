@@ -18,8 +18,11 @@ struct SpotLight {
 	float cutOff;
 };
 
+uniform int dirLightOn;
 uniform DirLight dirLight;
+uniform int pointLightsOn;
 uniform PointLight pointLights[NUM_POINT_LIGHTS];
+uniform int spotLightsOn;
 uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
 
 out vec4 colorOut;
@@ -53,15 +56,21 @@ void main()
 	vec4 res = vec4(0.0);
 
 	// add the directional light's contribution to the output
-	res += calculateDirLight(dirLight, n, e);
+	if (dirLightOn == 1) {
+		res += calculateDirLight(dirLight, n, e);
+	}
 		
 	// do the same for all point lights
-	for(int i = 0; i < NUM_POINT_LIGHTS; i++)
-		res += calculatePointLight(pointLights[i], n, e);
+	if (pointLightsOn == 1) {
+		for(int i = 0; i < NUM_POINT_LIGHTS; i++)
+			res += calculatePointLight(pointLights[i], n, e);
+	}
 		
 	// and add others lights as well (like spotlights)
-	for(int i = 0; i < NUM_SPOT_LIGHTS; i++)
-		res += calculateSpotLight(spotLights[i], n, e);
+	if (spotLightsOn == 1) {
+		for(int i = 0; i < NUM_SPOT_LIGHTS; i++)
+			res += calculateSpotLight(spotLights[i], n, e);
+	}
 	
 	// check if the last paramater of output isn't wrong
 	colorOut = max(res, mat.ambient);
