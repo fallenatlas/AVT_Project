@@ -367,20 +367,26 @@ void processKeys(unsigned char key, int xx, int yy)
 	}
 
 	if (key == 'd') {
-		boat.increaseSpeed(0.4F);
-		std::vector<float> rotation = { -1.0F, 0, 0, 0 };
-		boat_node.spin(rotation);
-		boat.setDirection(boat_element.rotation);
-		rotation = { boat.speed * 1.0F, 0, 0, 0 };
+		std::vector<float> rotation = { 10.0F, 0, 0, 0 };
 		right_paddle_node.spin(rotation);
+		if ((int)right_paddle_element.rotation[0] % 360 < 55 ||
+			(int)right_paddle_element.rotation[0] % 360 > 310) {
+			boat.increaseSpeed(0.4F);
+			rotation = { -1.0F, 0, 0, 0 };
+			boat_node.spin(rotation);
+			boat.setDirection(boat_element.rotation);
+		}
 	}
 	if (key == 'a') {
-		boat.increaseSpeed(0.4F);
-		std::vector<float> rotation = { 1.0F, 0, 0, 0 };
-		boat_node.spin(rotation);
-		boat.setDirection(boat_element.rotation);
-		rotation = { boat.speed * 1.0F, 0, 0, 0 };
+		std::vector<float> rotation = { 10.0F, 0, 0, 0 };
 		left_paddle_node.spin(rotation);
+		if ((int)left_paddle_element.rotation[0] % 360 < 55 || 
+			(int)left_paddle_element.rotation[0] % 360 > 310) {
+			boat.increaseSpeed(0.4F);
+			rotation = { 1.0F, 0, 0, 0 };
+			boat_node.spin(rotation);
+			boat.setDirection(boat_element.rotation);
+		}
 	}
 }
 
@@ -709,7 +715,7 @@ void initBoat() {
 	boat_node.addNode(&boat_part1_node);
 
 	// Left paddle as a whole
-	left_paddle_element.translation = { 1.2F, 0.3F, 1.0F }; //Starting position
+	left_paddle_element.translation = { 1.2F, 0.8F, 1.0F }; //Starting position
 	left_paddle_element.rotation = { 0.0F, 1.0F, 0.0F, 0.0F };
 	left_paddle_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	left_paddle_node = ScenegraphNode(0, &left_paddle_element, &shader);
@@ -723,7 +729,7 @@ void initBoat() {
 	memcpy(left_paddle_part1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	left_paddle_part1_element.mesh.mat.shininess = shininess;
 	left_paddle_part1_element.mesh.mat.texCount = texcount;
-	left_paddle_part1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	left_paddle_part1_element.translation = { 0.0F, -0.5F, 0.0F }; //Starting position
 	left_paddle_part1_element.rotation = { 45.0F, 0.0F, 0.0F, 1.0F };
 	left_paddle_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	left_paddle_part1_node = ScenegraphNode(0, &left_paddle_part1_element, &shader);
@@ -737,14 +743,14 @@ void initBoat() {
 	memcpy(left_paddle_part2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	left_paddle_part2_element.mesh.mat.shininess = shininess;
 	left_paddle_part2_element.mesh.mat.texCount = texcount;
-	left_paddle_part2_element.translation = { 0.424F, -0.424F, 0.0F }; //Starting position
+	left_paddle_part2_element.translation = { 0.424F, -0.924F, 0.0F }; //Starting position
 	left_paddle_part2_element.rotation = { -245.0F, -1.0F, -0.5F, 1.0F };
 	left_paddle_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	left_paddle_part2_node = ScenegraphNode(0, &left_paddle_part2_element, &shader);
 	left_paddle_node.addNode(&left_paddle_part2_node);
 
 	// Right paddle as a whole
-	right_paddle_element.translation = { -0.2F, 0.3F, 1.0F }; //Starting position
+	right_paddle_element.translation = { -0.2F, 0.8F, 1.0F }; //Starting position
 	right_paddle_element.rotation = { 0.0F, 1.0F, 0.0F, 0.0F };
 	right_paddle_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	right_paddle_node = ScenegraphNode(0, &right_paddle_element, &shader);
@@ -758,7 +764,7 @@ void initBoat() {
 	memcpy(right_paddle_part1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	right_paddle_part1_element.mesh.mat.shininess = shininess;
 	right_paddle_part1_element.mesh.mat.texCount = texcount;
-	right_paddle_part1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	right_paddle_part1_element.translation = { 0.0F, -0.5F, 0.0F }; //Starting position
 	right_paddle_part1_element.rotation = { -45.0F, 0.0F, 0.0F, 1.0F };
 	right_paddle_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	right_paddle_part1_node = ScenegraphNode(0, &right_paddle_part1_element, &shader);
@@ -772,7 +778,7 @@ void initBoat() {
 	memcpy(right_paddle_part2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	right_paddle_part2_element.mesh.mat.shininess = shininess;
 	right_paddle_part2_element.mesh.mat.texCount = texcount;
-	right_paddle_part2_element.translation = { -0.424F, -0.424F, 0.0F }; //Starting position
+	right_paddle_part2_element.translation = { -0.424F, -0.924F, 0.0F }; //Starting position
 	right_paddle_part2_element.rotation = { 245.0F, 1.0F, -0.5F, 1.0F };
 	right_paddle_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	right_paddle_part2_node = ScenegraphNode(0, &right_paddle_part2_element, &shader);
