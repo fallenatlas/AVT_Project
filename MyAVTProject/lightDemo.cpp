@@ -106,6 +106,10 @@ float spotLightDir[NUM_SPOT_LIGHTS][4]{
 	{ 0.0F, 0.0F, 1.0F, 0.0F }
 };// need to be point in the direction of the car
 
+bool dirLightActive = true; // 0 - off, 1 - on
+bool pointLightsActive = true; // see if we can use bools or something
+bool spotLightsActive = true;
+
 // Scene Nodes
 ScenegraphNode water_node;
 ScenegraphNode ob1_node;
@@ -258,10 +262,14 @@ void renderScene(void) {
 		//multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
 		//glUniform4fv(lPos_uniformId, 1, res);
 
+		loc = glGetUniformLocation(shader.getProgramIndex(), "dirLightOn");
+		glUniform1i(loc, dirLightActive ? 1 : 0);
 		multMatrixPoint(VIEW, directionalLightDir, res);
 		loc = glGetUniformLocation(shader.getProgramIndex(), "dirLight.position");
 		glUniform4fv(loc, 1, res);
 
+		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLightsOn");
+		glUniform1i(loc, pointLightsActive ? 1 : 0);
 		multMatrixPoint(VIEW, pointLightPos[0], res);
 		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[0].position");
 		glUniform4fv(loc, 1, res);
@@ -286,6 +294,8 @@ void renderScene(void) {
 		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[5].position");
 		glUniform4fv(loc, 1, res);
 
+		loc = glGetUniformLocation(shader.getProgramIndex(), "spotLightsOn");
+		glUniform1i(loc, spotLightsActive ? 1 : 0);
 		multMatrixPoint(VIEW, spotLightPos[0], res);
 		loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[0].position");
 		glUniform4fv(loc, 1, res);
@@ -346,12 +356,13 @@ void processKeys(unsigned char key, int xx, int yy)
 		case 27:
 			glutLeaveMainLoop();
 			break;
-
+		/*
 		case 'c': 
 			printf("Camera Spherical Coordinates (%f, %f, %f)\n", cameras[activeCamera].alpha, cameras[activeCamera].beta, cameras[activeCamera].distance);
 			break;
 		case 'm': glEnable(GL_MULTISAMPLE); break;
 		case 'n': glDisable(GL_MULTISAMPLE); break;
+		*/
 		case '1': 
 			activeCamera = 0;
 			cameras[activeCamera].updateProjectionMatrix(ratio);
@@ -364,6 +375,16 @@ void processKeys(unsigned char key, int xx, int yy)
 			activeCamera = 2; 
 			cameras[activeCamera].updateProjectionMatrix(ratio);
 			break;
+		case 'n':
+			dirLightActive = !dirLightActive;
+			break;
+		case 'c':
+			pointLightsActive = !pointLightsActive;
+			break;
+		case 'h':
+			spotLightsActive = !spotLightsActive;
+			break;
+
 	}
 
 	if (key == 'd') {
