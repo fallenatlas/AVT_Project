@@ -4,7 +4,6 @@
 #define NUM_SPOT_LIGHTS 2
 
 struct DirLight {
-	vec4 position;
 	vec4 direction;
 };
 
@@ -80,7 +79,7 @@ vec4 calculateDirLight(DirLight light, vec3 n, vec3 e)
 {
 	vec4 spec = vec4(0.0);
 
-	vec3 lightDir = normalize(vec3(light.position) + DataIn.eye); //fragPos can be -eye
+	vec3 lightDir = normalize(vec3(light.direction)); //fragPos can be -eye
 	float intensity = max(dot(n,lightDir), 0.0);
 
 	if (intensity > 0.0) {

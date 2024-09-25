@@ -11,6 +11,7 @@ public:
 	float up[3] = { 0.0F, 1.0F, 0.0F };
 	// Camera Spherical Coordinates
 	float distance = 10.0F;
+	float boatAngle = 0.0F;
 	float alpha = 0.0F;
 	float beta = 0.0F;
 
@@ -21,14 +22,16 @@ public:
 	}
 
 	void setOffset(float a, float b) {
+		a = a + boatAngle;
 		offset[0] = distance * sin(a * 3.14f / 180.0f) * cos(b * 3.14f / 180.0f);
 		offset[2] = distance * cos(a * 3.14f / 180.0f) * cos(b * 3.14f / 180.0f);
 		offset[1] = distance * sin(b * 3.14f / 180.0f);
 	}
 
 	void setOffset() {
-		offset[0] = distance * sin(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-		offset[2] = distance * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
+		float a = alpha + boatAngle;
+		offset[0] = distance * sin(a * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
+		offset[2] = distance * cos(a * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
 		offset[1] = distance * sin(beta * 3.14f / 180.0f);
 	}
 
