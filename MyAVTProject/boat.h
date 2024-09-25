@@ -9,7 +9,7 @@ public:
 	std::vector<float> direction = { 0.0F, 0.0F, 1.0F };
 	// we might want the angle so we can rotate the camera too
 
-	float speedDecay = 0.98F;
+	float speedDecay = 0.99F;
 	int elementNum = 0;
 
 	void increaseSpeed(float increase) {

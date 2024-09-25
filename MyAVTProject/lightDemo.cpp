@@ -223,15 +223,15 @@ void refresh(int value)
 	for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
 		// modify per thingy
 		float perpVector[3] = { boat.direction[2], 0.0F, -boat.direction[0] };
-		float modifier = 0.0f;
+		float modifier = -0.3f;
 		if (i == 1) {
-			modifier = 1.0f;
+			modifier = 0.3f;
 		}
 
 		for (int j = 0; j < 3; j++) {
-			spotLightPos[i][j] = boat_element.translation[j] + boat.direction[j] * 0.0F + perpVector[j] * modifier;
+			spotLightPos[i][j] = boat_element.translation[j] + boat.direction[j] * -0.0F + perpVector[j] * modifier;
 		}
-		spotLightPos[i][1] += 0.5F;
+		spotLightPos[i][1] += 1.0F;
 		spotLightPos[i][3] = 1.0f;
 	}
 
@@ -239,6 +239,7 @@ void refresh(int value)
 		for (int j = 0; j < 3; j++) {
 			spotLightDir[i][j] = boat.direction[j];
 		}
+		spotLightDir[i][1] -= 0.25f;
 		spotLightDir[i][3] = 0.0f;
 	}
 	
@@ -302,7 +303,7 @@ void renderScene(void) {
 		loc = glGetUniformLocation(shader.getProgramIndex(), "dirLightOn");
 		glUniform1i(loc, dirLightActive ? 1 : 0);
 		multMatrixPoint(VIEW, directionalLightDir, res);
-		loc = glGetUniformLocation(shader.getProgramIndex(), "dirLight.position");
+		loc = glGetUniformLocation(shader.getProgramIndex(), "dirLight.direction");
 		glUniform4fv(loc, 1, res);
 
 		loc = glGetUniformLocation(shader.getProgramIndex(), "pointLightsOn");
@@ -620,8 +621,8 @@ void initMap()
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	int texcount = 0;
 
-	float amb1[] = { 0.0f, 0.3f, 1.0f, 1.0f };
-	float diff1[] = { 0.1f, 0.1f, 0.8f, 1.0f };
+	float amb1[] = { 0.0f, 0.1f, 0.3f, 1.0f };
+	float diff1[] = { 0.1f, 0.3f, 0.8f, 1.0f };
 	float spec1[] = { 0.9f, 0.9f, 0.9f, 1.0f };
 	float shininess = 500.0;
 	
@@ -763,7 +764,7 @@ void initBoat() {
 	memcpy(boat_part2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	boat_part2_element.mesh.mat.shininess = shininess;
 	boat_part2_element.mesh.mat.texCount = texcount;
-	boat_part2_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	boat_part2_element.translation = { -0.5F, 0.0F, -1.0F }; //Starting position
 	boat_part2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	boat_part2_element.scale = { 1.0F, 0.5F, 2.0F, 0.0F};
 	boat_part2_node = ScenegraphNode(0, &boat_part2_element, &shader);
@@ -777,14 +778,14 @@ void initBoat() {
 	memcpy(boat_part1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	boat_part1_element.mesh.mat.shininess = shininess;
 	boat_part1_element.mesh.mat.texCount = texcount;
-	boat_part1_element.translation = { 0.0F, 0.0F, 2.0F }; //Starting position
+	boat_part1_element.translation = { -0.5F, 0.0F, 1.0F }; //Starting position
 	boat_part1_element.rotation = { 45.0F, 0.0F, 1.0F, 0.0F };
 	boat_part1_element.scale = { (float)sqrt(0.5), 0.5F, (float)sqrt(0.5), 0.0F};
 	boat_part1_node = ScenegraphNode(0, &boat_part1_element, &shader);
 	boat_node.addNode(&boat_part1_node);
 
 	// Left paddle as a whole
-	left_paddle_element.translation = { 1.2F, 0.8F, 1.0F }; //Starting position
+	left_paddle_element.translation = { 0.7F, 0.8F, 0.0F }; //Starting position
 	left_paddle_element.rotation = { 0.0F, 1.0F, 0.0F, 0.0F };
 	left_paddle_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	left_paddle_node = ScenegraphNode(0, &left_paddle_element, &shader);
@@ -819,7 +820,7 @@ void initBoat() {
 	left_paddle_node.addNode(&left_paddle_part2_node);
 
 	// Right paddle as a whole
-	right_paddle_element.translation = { -0.2F, 0.8F, 1.0F }; //Starting position
+	right_paddle_element.translation = { -0.7F, 0.8F, 0.0F }; //Starting position
 	right_paddle_element.rotation = { 0.0F, 1.0F, 0.0F, 0.0F };
 	right_paddle_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	right_paddle_node = ScenegraphNode(0, &right_paddle_element, &shader);
@@ -869,7 +870,7 @@ void init()
 	/// Initialization of freetype library with font_name file
 	freeType_init(font_name);
 
-	cameras[0] = Camera(0, 10.0F, 39.0F, 51.0F);
+	cameras[0] = Camera(0, 10.0F, 180.0F, 20.0F);
 	cameras[1] = Camera(0, 20.0F, 0.0F, 90.0F);
 	cameras[2] = Camera(1, 20.0F, 0.0F, 90.0F);
 	
