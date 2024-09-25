@@ -22,6 +22,7 @@ class ScenegraphNode {
 
     void draw();
     void move(std::vector<float> translation);
+    void position(std::vector<float> position);
     void spin(std::vector<float> rotation);
     void addNode(ScenegraphNode* node);
     

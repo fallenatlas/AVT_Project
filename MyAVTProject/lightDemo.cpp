@@ -57,6 +57,7 @@ const string font_name = "fonts/arial.ttf";
 
 //Vector with meshes
 Boat boat;
+Boat monster1;
 
 //External array storage defined in AVTmathLib.cpp
 
@@ -134,6 +135,13 @@ ScenegraphNode left_paddle_part2_node;
 ScenegraphNode right_paddle_node;
 ScenegraphNode right_paddle_part1_node;
 ScenegraphNode right_paddle_part2_node;
+ScenegraphNode monster1_node;
+ScenegraphNode monster1_part1_node;
+ScenegraphNode monster1_part2_node;
+ScenegraphNode monster1_part3_node;
+ScenegraphNode monster1_part4_node;
+ScenegraphNode monster1_part5_node;
+ScenegraphNode monster1_part6_node;
 
 // Scene Elements
 SceneElement water_element;
@@ -154,6 +162,13 @@ SceneElement left_paddle_part2_element;
 SceneElement right_paddle_element;
 SceneElement right_paddle_part1_element;
 SceneElement right_paddle_part2_element;
+SceneElement monster1_element;
+SceneElement monster1_part1_element;
+SceneElement monster1_part2_element;
+SceneElement monster1_part3_element;
+SceneElement monster1_part4_element;
+SceneElement monster1_part5_element;
+SceneElement monster1_part6_element;
 
 
 void timer(int value)
@@ -212,9 +227,28 @@ void haddle_movement() {
 	}
 }
 
+void haddle_monster_movement() {
+	float deltaTime = 1.0F / 60.0F;
+	std::vector<float> movement{ 0.0F, 0.0F, 0.0F };
+
+	for (int i = 0; i < monster1_element.translation.size(); i++) {
+		movement[i] = monster1.speed * monster1.direction[i] * deltaTime;
+	}
+	monster1_node.move(movement);
+
+	// Respawn
+	if (monster1_element.translation[0] > 80 || monster1_element.translation[0] < -80 ||
+		monster1_element.translation[2] > 80 || monster1_element.translation[2] < -80) {
+		vector<float> spawn = { 0.0F, 0.5F, 0.0F }; //TODO: spawn on the edges with rand rotation
+		monster1_node.position(spawn);
+	}
+}
+
 void refresh(int value)
 {
 	haddle_movement();
+
+	haddle_monster_movement();
 
 	cameras[activeCamera].target[0] = boat_element.translation[0];
 	cameras[activeCamera].target[1] = boat_element.translation[1];
@@ -855,6 +889,113 @@ void initBoat() {
 	right_paddle_node.addNode(&right_paddle_part2_node);
 }
 
+void initCreatures() {
+	float amb[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float diff[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float spec[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	int texcount = 0;
+	float shininess = 100.0f;
+
+	float amb1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float diff1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float spec1[] = { 0.7f, 0.3f, 0.3f, 1.0f };
+
+	// Monster as a whole
+	monster1_element.translation = { 3.0F, 0.5F, 0.0F }; //Starting position
+	monster1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	monster1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster1_node = ScenegraphNode(0, &monster1_element, &shader);
+	scenegraph.addNode(&monster1_node);
+
+	monster1.speed = 5;
+	monster1.direction = {-1, 0, 0};
+
+	// Upper jaw
+	monster1_part1_element.mesh = createCone(1.5f, 0.5f, 20);
+	memcpy(monster1_part1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(monster1_part1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(monster1_part1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(monster1_part1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster1_part1_element.mesh.mat.shininess = shininess;
+	monster1_part1_element.mesh.mat.texCount = texcount;
+	monster1_part1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	monster1_part1_element.rotation = { 80.0F, 0.0F, 0.0F, 1.0F };
+	monster1_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster1_part1_node = ScenegraphNode(0, &monster1_part1_element, &shader);
+	monster1_node.addNode(&monster1_part1_node);
+
+	// Lower jaw
+	monster1_part2_element.mesh = createCone(1.5f, 0.5f, 20);
+	memcpy(monster1_part2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(monster1_part2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(monster1_part2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(monster1_part2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster1_part2_element.mesh.mat.shininess = shininess;
+	monster1_part2_element.mesh.mat.texCount = texcount;
+	monster1_part2_element.translation = { 0.0F, -0.5F, 0.0F }; //Starting position
+	monster1_part2_element.rotation = { 100.0F, 0.0F, 0.0F, 1.0F };
+	monster1_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster1_part2_node = ScenegraphNode(0, &monster1_part2_element, &shader);
+	monster1_node.addNode(&monster1_part2_node);
+
+	// Head
+	monster1_part3_element.mesh = createSphere(0.85f, 20);
+	memcpy(monster1_part3_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(monster1_part3_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(monster1_part3_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(monster1_part3_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster1_part3_element.mesh.mat.shininess = shininess;
+	monster1_part3_element.mesh.mat.texCount = texcount;
+	monster1_part3_element.translation = { 0.5F, -0.2F, 0.0F }; //Starting position
+	monster1_part3_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
+	monster1_part3_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster1_part3_node = ScenegraphNode(0, &monster1_part3_element, &shader);
+	monster1_node.addNode(&monster1_part3_node);
+
+	// Body
+	monster1_part4_element.mesh = createCone(10.0f, 0.7f, 20);
+	memcpy(monster1_part4_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(monster1_part4_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(monster1_part4_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(monster1_part4_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster1_part4_element.mesh.mat.shininess = shininess;
+	monster1_part4_element.mesh.mat.texCount = texcount;
+	monster1_part4_element.translation = { 0.2F, -0.2F, 0.0F }; //Starting position
+	monster1_part4_element.rotation = { -95.0F, 0.0F, 0.0F, 1.0F };
+	monster1_part4_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster1_part4_node = ScenegraphNode(0, &monster1_part4_element, &shader);
+	monster1_node.addNode(&monster1_part4_node);
+
+	// Left Eye
+	monster1_part5_element.mesh = createSphere(0.2f, 20);
+	memcpy(monster1_part5_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(monster1_part5_element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(monster1_part5_element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(monster1_part5_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster1_part5_element.mesh.mat.shininess = shininess;
+	monster1_part5_element.mesh.mat.texCount = texcount;
+	monster1_part5_element.translation = { 0.2F, 0.35F, 0.3F }; //Starting position
+	monster1_part5_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
+	monster1_part5_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster1_part5_node = ScenegraphNode(0, &monster1_part5_element, &shader);
+	monster1_node.addNode(&monster1_part5_node);
+	
+	// Right Eye
+	monster1_part6_element.mesh = createSphere(0.2f, 20);
+	memcpy(monster1_part6_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(monster1_part6_element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(monster1_part6_element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(monster1_part6_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster1_part6_element.mesh.mat.shininess = shininess;
+	monster1_part6_element.mesh.mat.texCount = texcount;
+	monster1_part6_element.translation = { 0.2F, 0.35F, -0.3F }; //Starting position
+	monster1_part6_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
+	monster1_part6_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster1_part6_node = ScenegraphNode(0, &monster1_part6_element, &shader);
+	monster1_node.addNode(&monster1_part6_node);
+}
+
 void init()
 {
 	SceneElement element;
@@ -914,6 +1055,7 @@ void init()
 
 	initBoat();
 	initMap();
+	initCreatures();
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
