@@ -110,6 +110,11 @@ bool dirLightActive = true; // 0 - off, 1 - on
 bool pointLightsActive = true; // see if we can use bools or something
 bool spotLightsActive = true;
 
+// Toggles
+bool key_a_is_pressed = false;
+bool key_d_is_pressed = false;
+bool key_s_is_pressed = false;
+
 // Scene Nodes
 ScenegraphNode water_node;
 ScenegraphNode ob1_node;
@@ -162,8 +167,11 @@ void timer(int value)
     glutTimerFunc(1000, timer, 0);
 }
 
-void refresh(int value)
-{
+void haddle_movement() {
+	int rotation_dir = 1;
+	if (key_s_is_pressed)
+		rotation_dir = -1;
+
 	float deltaTime = 1.0F / 60.0F;
 	std::vector<float> movement{ 0.0F, 0.0F, 0.0F };
 
@@ -173,10 +181,40 @@ void refresh(int value)
 	boat_node.move(movement);
 
 	//myElements[boat.elementNum].translation += boat.direction * boat.speed * deltaTime;
-	if (boat.speed > 0.0F) {
+	if (boat.speed != 0.0F) {
 		boat.speed *= boat.speedDecay;
 		//boat.speed = std::max(boat.speed - boat.speedDecay, 0.0F); // experiment boat.speed *= decay
 	}
+
+	std::vector<float> rotation = { rotation_dir * boat.rowing_speed, 0, 0, 0 };
+
+	if (key_a_is_pressed) {
+		left_paddle_node.spin(rotation);
+		if ((int)left_paddle_element.rotation[0] % 360 < 55 ||
+			(int)left_paddle_element.rotation[0] % 360 > 310) {
+			boat.increaseSpeed(boat.acceleration * rotation_dir);
+			rotation = { 1.0F * rotation_dir, 0, 0, 0 };
+			boat_node.spin(rotation);
+			boat.setDirection(boat_element.rotation);
+		}
+	}
+	rotation = { rotation_dir * boat.rowing_speed, 0, 0, 0 };
+
+	if (key_d_is_pressed) {
+		right_paddle_node.spin(rotation);
+		if ((int)right_paddle_element.rotation[0] % 360 < 55 ||
+			(int)right_paddle_element.rotation[0] % 360 > 310) {
+			boat.increaseSpeed(boat.acceleration * rotation_dir);
+			rotation = { -1.0F * rotation_dir, 0, 0, 0 };
+			boat_node.spin(rotation);
+			boat.setDirection(boat_element.rotation);
+		}
+	}
+}
+
+void refresh(int value)
+{
+	haddle_movement();
 
 	cameras[activeCamera].target[0] = boat_element.translation[0];
 	cameras[activeCamera].target[1] = boat_element.translation[1];
@@ -231,7 +269,6 @@ void changeSize(int w, int h) {
 	ratio = (1.0f * w) / h;
 	cameras[activeCamera].updateProjectionMatrix(ratio);
 }
-
 
 // ------------------------------------------------------------
 //
@@ -384,30 +421,41 @@ void processKeys(unsigned char key, int xx, int yy)
 		case 'h':
 			spotLightsActive = !spotLightsActive;
 			break;
+		case 'a':
+			key_a_is_pressed = true;
+			break;
+		case 'd':
+			key_d_is_pressed = true;
+			break;
+		case 's':
+			key_s_is_pressed = true;
+			break;
+		case 'o':
+			boat.acceleration = 0.6;
+			boat.rowing_speed = 15.0;
+			break;
 
 	}
+}
 
-	if (key == 'd') {
-		std::vector<float> rotation = { 10.0F, 0, 0, 0 };
-		right_paddle_node.spin(rotation);
-		if ((int)right_paddle_element.rotation[0] % 360 < 55 ||
-			(int)right_paddle_element.rotation[0] % 360 > 310) {
-			boat.increaseSpeed(0.4F);
-			rotation = { -1.0F, 0, 0, 0 };
-			boat_node.spin(rotation);
-			boat.setDirection(boat_element.rotation);
-		}
-	}
-	if (key == 'a') {
-		std::vector<float> rotation = { 10.0F, 0, 0, 0 };
-		left_paddle_node.spin(rotation);
-		if ((int)left_paddle_element.rotation[0] % 360 < 55 || 
-			(int)left_paddle_element.rotation[0] % 360 > 310) {
-			boat.increaseSpeed(0.4F);
-			rotation = { 1.0F, 0, 0, 0 };
-			boat_node.spin(rotation);
-			boat.setDirection(boat_element.rotation);
-		}
+void processUpKeys(unsigned char key, int xx, int yy)
+{
+	switch (key) {
+
+	case 'a':
+		key_a_is_pressed = false;
+		break;
+	case 'd':
+		key_d_is_pressed = false;
+		break;
+	case 's':
+		key_s_is_pressed = false;
+		break;
+	case 'o':
+		boat.acceleration = 0.4;
+		boat.rowing_speed = 10.0;
+		break;
+
 	}
 }
 
@@ -905,9 +953,11 @@ int main(int argc, char **argv) {
 
 //	Mouse and Keyboard Callbacks
 	glutKeyboardFunc(processKeys);
+	glutKeyboardUpFunc(processUpKeys);
 	glutMouseFunc(processMouseButtons);
 	glutMotionFunc(processMouseMotion);
 	glutMouseWheelFunc ( mouseWheel ) ;
+	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
 	
 
 //	return from main loop
