@@ -116,13 +116,14 @@ vec4 calculateSpotLight(SpotLight light, vec3 n, vec3 e) // should be just posit
     
 	if(theta > light.cutOff) 
 	{       
-	  float intensity = max(dot(n,lightDir), 0.0);
+		float spotExp = 0.0;
+		float att = pow(theta, spotExp);
+		float intensity = max(dot(n,lightDir), 0.0) * att;
 
 		if (intensity > 0.0) {
-
 			vec3 h = normalize(lightDir + e);
 			float intSpec = max(dot(h,n), 0.0);
-			spec = mat.specular * pow(intSpec, mat.shininess);
+			spec = mat.specular * pow(intSpec, mat.shininess) * att;
 		}
 		return intensity * mat.diffuse + spec;
 	}

@@ -185,9 +185,9 @@ void refresh(int value)
 	for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
 		// modify per thingy
 		float perpVector[3] = { boat.direction[2], 0.0F, -boat.direction[0] };
-		float modifier = -0.5f;
+		float modifier = -0.3f;
 		if (i == 1) {
-			modifier = 0.5f;
+			modifier = 0.3f;
 		}
 
 		for (int j = 0; j < 3; j++) {
@@ -394,7 +394,7 @@ void processKeys(unsigned char key, int xx, int yy)
 		if ((int)right_paddle_element.rotation[0] % 360 < 55 ||
 			(int)right_paddle_element.rotation[0] % 360 > 310) {
 			boat.increaseSpeed(0.4F);
-			rotation = { -1.0F, 0, 0, 0 };
+			rotation = { -1.5F, 0, 0, 0 };
 			boat_node.spin(rotation);
 			boat.setDirection(boat_element.rotation);
 			cameras[activeCamera].boatAngle = boat_element.rotation[0];
@@ -407,7 +407,7 @@ void processKeys(unsigned char key, int xx, int yy)
 		if ((int)left_paddle_element.rotation[0] % 360 < 55 || 
 			(int)left_paddle_element.rotation[0] % 360 > 310) {
 			boat.increaseSpeed(0.4F);
-			rotation = { 1.0F, 0, 0, 0 };
+			rotation = { 1.5F, 0, 0, 0 };
 			boat_node.spin(rotation);
 			boat.setDirection(boat_element.rotation);
 			cameras[activeCamera].boatAngle = boat_element.rotation[0];
