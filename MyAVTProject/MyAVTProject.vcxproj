@@ -163,6 +163,8 @@
     <ClCompile Include="avtFreeType.cpp" />
     <ClCompile Include="AVTmathLib.cpp" />
     <ClCompile Include="basic_geometry.cpp" />
+    <ClCompile Include="boat.cpp" />
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="lightDemo.cpp" />
     <ClCompile Include="Scenegraph.cpp" />
     <ClCompile Include="ScenegraphNode.cpp" />
