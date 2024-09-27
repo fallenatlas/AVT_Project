@@ -34,6 +34,7 @@
 #include "camera.h"
 #include "Scenegraph.hpp"
 #include "boat.h"
+#include "aabb.h"
 
 #include "avtFreeType.h"
 
@@ -156,6 +157,9 @@ ScenegraphNode monster2_part4_node;
 ScenegraphNode monster2_part5_node;
 ScenegraphNode monster2_part6_node;
 
+ScenegraphNode debug1_node;
+ScenegraphNode debug2_node;
+
 // Scene Elements
 SceneElement water_element;
 SceneElement ob1_element;
@@ -190,6 +194,12 @@ SceneElement monster2_part4_element;
 SceneElement monster2_part5_element;
 SceneElement monster2_part6_element;
 
+SceneElement debug1_element;
+SceneElement debug2_element;
+
+// AABBs
+AABB boat_aabb;
+
 
 void timer(int value)
 {
@@ -200,6 +210,30 @@ void timer(int value)
 	glutSetWindowTitle(s.c_str());
     FrameCount = 0;
     glutTimerFunc(1000, timer, 0);
+}
+
+void handle_collisions() {
+	// update the boat aabb
+	float points1[32];
+	AABB::getLocalPoints(boat_part1_element.mesh.transform, points1);
+	float points2[32];
+	AABB::getLocalPoints(boat_part2_element.mesh.transform, points2);
+
+	boat_aabb.update(points1, points2);
+
+	debug1_element.translation = boat_aabb.max;
+	debug2_element.translation = boat_aabb.min;
+
+	// update aabb for every monster (the aabbs for houses and stuff are static)
+	//for (auto aabb : monster_aabbs) {
+	//	aabb.update()
+	//}
+
+	// check for collisons between boat and every other object
+	//for (auto aabb : obstacles) {
+	//
+	//}
+
 }
 
 void haddle_movement() {
@@ -231,6 +265,8 @@ void haddle_movement() {
 			rotation = { 1.0F * rotation_dir, 0, 0, 0 };
 			boat_node.spin(rotation);
 			boat.setDirection(boat_element.rotation);
+			cameras[0].boatAngle = boat_element.rotation[0];
+			cameras[0].setOffset();
 		}
 	}
 	rotation = { rotation_dir * boat.rowing_speed, 0, 0, 0 };
@@ -243,6 +279,8 @@ void haddle_movement() {
 			rotation = { -1.0F * rotation_dir, 0, 0, 0 };
 			boat_node.spin(rotation);
 			boat.setDirection(boat_element.rotation);
+			cameras[0].boatAngle = boat_element.rotation[0];
+			cameras[0].setOffset();
 		}
 	}
 }
@@ -346,6 +384,8 @@ void haddle_monster_movement() {
 
 void refresh(int value)
 {
+	handle_collisions();
+
 	haddle_movement();
 
 	haddle_monster_movement();
@@ -870,6 +910,34 @@ void initMap()
 	house2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	house2_node = ScenegraphNode(9, &house2_element, &shader);
 	scenegraph.addNode(&house2_node);
+
+
+	// debug boat aabb
+	debug1_element.mesh = createCube();
+	memcpy(debug1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(debug1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(debug1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(debug1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	debug1_element.mesh.mat.shininess = shininess;
+	debug1_element.mesh.mat.texCount = texcount;
+	debug1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	debug1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	debug1_element.scale = { 0.1F, 0.1F, 0.1F};
+	debug1_node = ScenegraphNode(10, &debug1_element, &shader);
+	scenegraph.addNode(&debug1_node);
+
+	debug2_element.mesh = createCube();
+	memcpy(debug2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(debug2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(debug2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(debug2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	debug2_element.mesh.mat.shininess = shininess;
+	debug2_element.mesh.mat.texCount = texcount;
+	debug2_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	debug2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	debug2_element.scale = { 0.1F, 0.1F, 0.1F };
+	debug2_node = ScenegraphNode(11, &debug2_element, &shader);
+	scenegraph.addNode(&debug2_node);
 }
 
 void initBoat() {

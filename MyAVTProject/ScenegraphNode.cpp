@@ -61,6 +61,8 @@ void ScenegraphNode::draw() {
     for(ScenegraphNode* node : Children) {
         node->draw();
     }
+
+    memcpy(Element->mesh.transform, mMatrix[MODEL], 16 * sizeof(float));
     popMatrix(MODEL);
 }
 

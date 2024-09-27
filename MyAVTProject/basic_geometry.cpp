@@ -32,7 +32,7 @@ MyMesh createQuad(float size_x, float size_y) {
 	amesh.isValid = true;
 	amesh.numIndexes = 2*3;
 
-	memcpy(vert, quad_vertices, sizeof(float) * 16);
+	memcpy(vert, Cube::quad_vertices, sizeof(float) * 16);
 
 	for(i=0; i< 4; i++) {
 		vert[i*4] *= size_x;
@@ -45,21 +45,21 @@ MyMesh createQuad(float size_x, float size_y) {
 	glGenBuffers(2, VboId);
 	glBindBuffer(GL_ARRAY_BUFFER, VboId[0]);
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices)+sizeof(quad_normals)+sizeof(quad_texCoords),NULL,GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(quad_vertices), vert);
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(quad_vertices), sizeof(quad_normals), quad_normals);
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(quad_vertices)+ sizeof(quad_normals), sizeof(quad_texCoords), quad_texCoords);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Cube::quad_vertices)+sizeof(Cube::quad_normals)+sizeof(Cube::quad_texCoords),NULL,GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Cube::quad_vertices), vert);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(Cube::quad_vertices), sizeof(Cube::quad_normals), Cube::quad_normals);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(Cube::quad_vertices)+ sizeof(Cube::quad_normals), sizeof(Cube::quad_texCoords), Cube::quad_texCoords);
     
     glEnableVertexAttribArray(VERTEX_COORD_ATTRIB);
     glVertexAttribPointer(VERTEX_COORD_ATTRIB, 4, GL_FLOAT, 0, 0, 0);
     glEnableVertexAttribArray(NORMAL_ATTRIB);
-    glVertexAttribPointer(NORMAL_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)sizeof(quad_vertices));
+    glVertexAttribPointer(NORMAL_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)sizeof(Cube::quad_vertices));
     glEnableVertexAttribArray(TEXTURE_COORD_ATTRIB);
-    glVertexAttribPointer(TEXTURE_COORD_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)(sizeof(quad_vertices)+ sizeof(quad_normals)));
+    glVertexAttribPointer(TEXTURE_COORD_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)(sizeof(Cube::quad_vertices)+ sizeof(Cube::quad_normals)));
     
     //index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VboId[1]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * amesh.numIndexes, quad_faceIndex , GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * amesh.numIndexes, Cube::quad_faceIndex , GL_STATIC_DRAW);
     
     // unbind the VAO
     glBindVertexArray(0);
@@ -72,7 +72,7 @@ MyMesh createCube() {
 
 	MyMesh amesh;
 	amesh.isValid = true;
-	amesh.numIndexes = faceCount *3;
+	amesh.numIndexes = Cube::faceCount *3;
 
 	glGenVertexArrays(1, &(amesh.vao));
 	glBindVertexArray(amesh.vao);
@@ -80,29 +80,30 @@ MyMesh createCube() {
 	glGenBuffers(2, VboId);
 	glBindBuffer(GL_ARRAY_BUFFER, VboId[0]);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices)+sizeof(normals)+sizeof(texCoords)+sizeof(tangents),vertices,GL_STATIC_DRAW);
-		//glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-		//glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(normals), normals);
-		//glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices)+ sizeof(normals), sizeof(texCoords), texCoords);
-		//glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices)+sizeof(normals)+sizeof(texCoords), sizeof(tangents), tangents);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Cube::vertices)+sizeof(Cube::normals)+sizeof(Cube::texCoords)+sizeof(Cube::tangents), Cube::vertices,GL_STATIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Cube::vertices), Cube::vertices);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(Cube::vertices), sizeof(Cube::normals), Cube::normals);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(Cube::vertices)+ sizeof(Cube::normals), sizeof(Cube::texCoords), Cube::texCoords);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(Cube::vertices)+sizeof(Cube::normals)+sizeof(Cube::texCoords), sizeof(Cube::tangents), Cube::tangents);
 
 	glEnableVertexAttribArray(VERTEX_COORD_ATTRIB);
 	glVertexAttribPointer(VERTEX_COORD_ATTRIB, 4, GL_FLOAT, 0, 0, 0);
 	glEnableVertexAttribArray(NORMAL_ATTRIB);
-	glVertexAttribPointer(NORMAL_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)sizeof(vertices));
+	glVertexAttribPointer(NORMAL_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)sizeof(Cube::vertices));
 	glEnableVertexAttribArray(TEXTURE_COORD_ATTRIB);
-	glVertexAttribPointer(TEXTURE_COORD_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)(sizeof(vertices)+ sizeof(normals)));
+	glVertexAttribPointer(TEXTURE_COORD_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)(sizeof(Cube::vertices)+ sizeof(Cube::normals)));
 	glEnableVertexAttribArray(TANGENT_ATTRIB);
-	glVertexAttribPointer(TANGENT_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)(sizeof(vertices) + sizeof(normals) + sizeof(texCoords)));
+	glVertexAttribPointer(TANGENT_ATTRIB, 4, GL_FLOAT, 0, 0, (void *)(sizeof(Cube::vertices) + sizeof(Cube::normals) + sizeof(Cube::texCoords)));
 
 	//index buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VboId[1]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * amesh.numIndexes, faceIndex , GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * amesh.numIndexes, Cube::faceIndex , GL_STATIC_DRAW);
 
 // unbind the VAO
 	glBindVertexArray(0);
 	
 	amesh.type = GL_TRIANGLES;
+	setIdentityMatrix(amesh.transform, 4);
 	return(amesh);
 }
 

@@ -9,30 +9,13 @@ public:
 	std::vector<float> direction = { 0.0F, 0.0F, 1.0F };
 	float speedDecay = 0.99F;
 	int elementNum = 0;
-	// we might want the angle so we can rotate the camera too
 
 	// Variables for monsters
 	int initRotation = 20;
 	float rotationDir = 1;
 	float respawnTimer = 0;
 
-	void increaseSpeed(float increase) {
-		speed += increase;
-		if (speed > maxSpeed) {
-			speed = maxSpeed;
-		}
-		else if (speed < -maxSpeed) {
-			speed = -maxSpeed;
-		}
-	}
+	void increaseSpeed(float increase);
 
-	void setDirection(std::vector<float> rotation) {
-		// direction = rotation_matrix * (1.0F, 0.0F, 0.0F)
-		direction = { sin(rotation[0] * 3.14f / 180.0f), 0.0f, cos(rotation[0] * 3.14f / 180.0f) }; // assuming y-axis as the rotation axis
-		float mag = sqrt(direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]);
-
-		direction[0] /= mag;
-		direction[1] /= mag;
-		direction[2] /= mag;
-	}
+	void setDirection(std::vector<float> rotation);
 };
