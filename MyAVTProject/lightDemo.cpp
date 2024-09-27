@@ -200,6 +200,11 @@ SceneElement debug2_element;
 // AABBs
 AABB boat_aabb;
 
+//bool update_static_aabbs = true;
+AABB test_cube_aabb;
+
+const std::vector<float> initialBoatPos = { 0.0F, 0.0F, -1.0F };
+const std::vector<float> initialBoatRot = { 0.0F, 0.0F, 1.0F, 0.0F };
 
 void timer(int value)
 {
@@ -212,17 +217,62 @@ void timer(int value)
     glutTimerFunc(1000, timer, 0);
 }
 
+void collide_and_resolve(AABB& boat_aabb, AABB& other_aabb, SceneElement& other_element, bool respawn) {
+	auto info = boat_aabb.intersepts(other_aabb);
+	if (info.collided) {
+		if (respawn) {
+			// reset boat in initial position
+			boat_element.translation = initialBoatPos;
+			boat_element.rotation = initialBoatRot;
+			boat.speed = 0;
+			boat.setDirection(boat_element.rotation);
+			cameras[0].boatAngle = boat_element.rotation[0];
+			cameras[0].setOffset();
+			return;
+		}
+
+		std::vector<float> pushDirection;
+		if (info.axis == 0) {
+			pushDirection = { 1.0f, 0.0f, 0.0f };
+		}
+		else if (info.axis == 2) {
+			pushDirection = { 0.0F, 0.0F, 1.0F };
+		}
+		if (dotProduct(boat.direction.data(), pushDirection.data()) < 0.0f) {
+			pushDirection[0] = -pushDirection[0];
+			pushDirection[2] = -pushDirection[2];
+		}
+
+		other_element.translation = { other_element.translation[0] + pushDirection[0] * info.penetration * boat.speed,
+									  other_element.translation[1],
+									  other_element.translation[2] + pushDirection[2] * info.penetration * boat.speed };
+		boat.speed = 0; // we might potentially need to change this to like velocity
+	}
+}
+
 void handle_collisions() {
 	// update the boat aabb
-	float points1[32];
-	AABB::getLocalPoints(boat_part1_element.mesh.transform, points1);
-	float points2[32];
-	AABB::getLocalPoints(boat_part2_element.mesh.transform, points2);
+	std::vector<float> points1;
+	AABB::getGlobalCubePoints(boat_part1_element.mesh.transform, points1);
+	std::vector<float> points2;
+	AABB::getGlobalCubePoints(boat_part2_element.mesh.transform, points2);
+	points1.insert(points1.end(), points2.begin(), points2.end());
 
-	boat_aabb.update(points1, points2);
+	boat_aabb.updateWithVec(points1);
 
-	debug1_element.translation = boat_aabb.max;
-	debug2_element.translation = boat_aabb.min;
+	// update other aabbs
+	points1.clear();
+	AABB::getGlobalCilinderPoints(ob2_element.mesh.transform, points1);
+	test_cube_aabb.updateWithVec(points1);
+
+	debug1_element.translation = test_cube_aabb.max;
+	debug2_element.translation = test_cube_aabb.min;
+
+	// test collision with test cube
+	collide_and_resolve(boat_aabb, test_cube_aabb, ob2_element, false);
+	
+
+	// if cube is enemy reset boat at start
 
 	// update aabb for every monster (the aabbs for houses and stuff are static)
 	//for (auto aabb : monster_aabbs) {
@@ -949,8 +999,8 @@ void initBoat() {
 	float shininess = 100.0f;
 
 	// Boat as a whole
-	boat_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
-	boat_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	boat_element.translation = initialBoatPos; //Starting position
+	boat_element.rotation = initialBoatRot;
 	boat_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	boat_node = ScenegraphNode(0, &boat_element, &shader);
 	scenegraph.addNode(&boat_node);
