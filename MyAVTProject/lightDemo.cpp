@@ -94,12 +94,12 @@ char s[32];
 
 float directionalLightDir[4]{ 1.0f, 1000.0f, 1.0f, 0.0f };
 float pointLightPos[NUM_POINT_LIGHTS][4]{
-	{ -1.0F, 1.5F, 0.0F, 1.0F },
-	{ -1.0F, 1.5F, 5.0F, 1.0F },
-	{ 5.0F, 1.5F, -3.0F, 1.0F },
-	{ 5.0F, 1.5F, 2.0F, 1.0F },
-	{ 13.0F, 1.5F, 0.0F, 1.0F },
-	{ 12.0F, 1.5F, 5.0F, 1.0F }
+	{ 40.0F, 1.5F, -35.0F, 1.0F },
+	{ 50.0F, 1.5F, -30.0F, 1.0F },
+	{ 0.0F, 1.5F, 20.0F, 1.0F },
+	{ 10.0F, 1.5F, 20.0F, 1.0F },
+	{ -20.0F, 1.5F, 55.0F, 1.0F },
+	{ -20.0F, 1.5F, 65.0F, 1.0F }
 };
 float spotLightPos[NUM_SPOT_LIGHTS][4]{
 	{ 0.0F, 1.0F, 0.0F, 1.0F },
@@ -157,6 +157,12 @@ ScenegraphNode monster2_part4_node;
 ScenegraphNode monster2_part5_node;
 ScenegraphNode monster2_part6_node;
 
+// Islands
+ScenegraphNode island1_node;
+ScenegraphNode island2_node;
+ScenegraphNode island3_node;
+ScenegraphNode island4_node;
+
 ScenegraphNode debug1_node;
 ScenegraphNode debug2_node;
 
@@ -194,6 +200,12 @@ SceneElement monster2_part4_element;
 SceneElement monster2_part5_element;
 SceneElement monster2_part6_element;
 
+// Islands
+SceneElement island1_element;
+SceneElement island2_element;
+SceneElement island3_element;
+SceneElement island4_element;
+
 SceneElement debug1_element;
 SceneElement debug2_element;
 
@@ -201,9 +213,12 @@ SceneElement debug2_element;
 AABB boat_aabb;
 
 //bool update_static_aabbs = true;
-AABB test_cube_aabb;
+AABB island1_aabb;
+AABB island2_aabb;
+AABB island3_aabb;
+AABB island4_aabb;
 
-const std::vector<float> initialBoatPos = { 0.0F, 0.0F, -1.0F };
+const std::vector<float> initialBoatPos = { 65.0F, 0.0F, -70.0F };
 const std::vector<float> initialBoatRot = { 0.0F, 0.0F, 1.0F, 0.0F };
 
 void timer(int value)
@@ -260,16 +275,35 @@ void handle_collisions() {
 
 	boat_aabb.updateWithVec(points1);
 
-	// update other aabbs
+	// update islands aabbs
 	points1.clear();
-	AABB::getGlobalCilinderPoints(ob2_element.mesh.transform, points1);
-	test_cube_aabb.updateWithVec(points1);
+	AABB::getGlobalCubePoints(island1_element.mesh.transform, points1);
+	island1_aabb.updateWithVec(points1);
 
-	debug1_element.translation = test_cube_aabb.max;
-	debug2_element.translation = test_cube_aabb.min;
+	points1.clear();
+	AABB::getGlobalCubePoints(island2_element.mesh.transform, points1);
+	island2_aabb.updateWithVec(points1);
+
+	points1.clear();
+	AABB::getGlobalCubePoints(island3_element.mesh.transform, points1);
+	island3_aabb.updateWithVec(points1);
+
+	points1.clear();
+	AABB::getGlobalCubePoints(island4_element.mesh.transform, points1);
+	island4_aabb.updateWithVec(points1);
+
+	debug1_element.translation = island1_aabb.max;
+	debug2_element.translation = island1_aabb.min;
+
+	// update cylinder aabbs
+
+	// update monters aabbs
 
 	// test collision with test cube
-	collide_and_resolve(boat_aabb, test_cube_aabb, ob2_element, false);
+	collide_and_resolve(boat_aabb, island1_aabb, island1_element, false);
+	collide_and_resolve(boat_aabb, island2_aabb, island2_element, false);
+	collide_and_resolve(boat_aabb, island3_aabb, island3_element, false);
+	collide_and_resolve(boat_aabb, island3_aabb, island4_element, false);
 	
 
 	// if cube is enemy reset boat at start
@@ -860,6 +894,59 @@ void initMap()
 	water_node = ScenegraphNode(1, &water_element, &shader);
 	scenegraph.addNode(&water_node);
 	
+	// Islands ------------------------------------------
+	island1_element.mesh = createCube();
+	memcpy(island1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(island1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(island1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(island1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	island1_element.mesh.mat.shininess = shininess;
+	island1_element.mesh.mat.texCount = texcount;
+	island1_element.translation = { 50.0F, 0.0F, -70.0F }; //Starting position
+	island1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	island1_element.scale = { 10.0f, 0.5f, 10.0f };
+	island1_node = ScenegraphNode(0, &island1_element, &shader);
+	scenegraph.addNode(&island1_node);
+
+	island2_element.mesh = createCube();
+	memcpy(island2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(island2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(island2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(island2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	island2_element.mesh.mat.shininess = shininess;
+	island2_element.mesh.mat.texCount = texcount;
+	island2_element.translation = { 30.0F, 0.0F, 0.0F }; //Starting position
+	island2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	island2_element.scale = { 10.0f, 0.5f, 10.0f };
+	island2_node = ScenegraphNode(0, &island2_element, &shader);
+	scenegraph.addNode(&island2_node);
+	
+	island3_element.mesh = createCube();
+	memcpy(island3_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(island3_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(island3_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(island3_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	island3_element.mesh.mat.shininess = shininess;
+	island3_element.mesh.mat.texCount = texcount;
+	island3_element.translation = { 10.0F, 0.0F, -10.0F }; //Starting position
+	island3_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	island3_element.scale = { 10.0f, 0.5f, 10.0f };
+	island3_node = ScenegraphNode(0, &island3_element, &shader);
+	scenegraph.addNode(&island3_node);
+	
+	island4_element.mesh = createCube();
+	memcpy(island4_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(island4_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(island4_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(island4_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	island4_element.mesh.mat.shininess = shininess;
+	island4_element.mesh.mat.texCount = texcount;
+	island4_element.translation = { -20.0F, 0.0F, 40.0F }; //Starting position
+	island4_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	island4_element.scale = { 10.0f, 0.5f, 10.0f };
+	island4_node = ScenegraphNode(0, &island4_element, &shader);
+	scenegraph.addNode(&island4_node);
+	
 	// Obstacles ----------------------------------------
 	shininess = 100.0f;
 
@@ -870,7 +957,7 @@ void initMap()
 	memcpy(ob1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob1_element.mesh.mat.shininess = shininess;
 	ob1_element.mesh.mat.texCount = texcount;
-	ob1_element.translation = { 80.0F, 0.0F, 0.0F }; //Starting position
+	ob1_element.translation = { 40.0F, 0.0F, -35.0F }; //Starting position
 	ob1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	ob1_node = ScenegraphNode(2, &ob1_element, &shader);
 	scenegraph.addNode(&ob1_node);
@@ -882,7 +969,7 @@ void initMap()
 	memcpy(ob2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob2_element.mesh.mat.shininess = shininess;
 	ob2_element.mesh.mat.texCount = texcount;
-	ob2_element.translation = { -1.0F, 0.0F, -80.0F }; //Starting position
+	ob2_element.translation = { 50.0F, 0.0F, -30.0F }; //Starting position
 	ob2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	ob2_node = ScenegraphNode(3, &ob2_element, &shader);
 	scenegraph.addNode(&ob2_node);
@@ -894,7 +981,7 @@ void initMap()
 	memcpy(ob3_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob3_element.mesh.mat.shininess = shininess;
 	ob3_element.mesh.mat.texCount = texcount;
-	ob3_element.translation = { 5.0F, 0.0F, 2.0F }; //Starting position
+	ob3_element.translation = { 0.0F, 0.0F, 20.0F }; //Starting position
 	ob3_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	ob3_node = ScenegraphNode(4, &ob3_element, &shader);
 	scenegraph.addNode(&ob3_node);
@@ -906,7 +993,7 @@ void initMap()
 	memcpy(ob4_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob4_element.mesh.mat.shininess = shininess;
 	ob4_element.mesh.mat.texCount = texcount;
-	ob4_element.translation = { 13.0F, 0.0F, 0.0F }; //Starting position
+	ob4_element.translation = { 10.0F, 0.0F, 20.0F }; //Starting position
 	ob4_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	ob4_node = ScenegraphNode(5, &ob4_element, &shader);
 	scenegraph.addNode(&ob4_node);
@@ -918,7 +1005,7 @@ void initMap()
 	memcpy(ob5_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob5_element.mesh.mat.shininess = shininess;
 	ob5_element.mesh.mat.texCount = texcount;
-	ob5_element.translation = { 12.0F, 0.0F, 5.0F }; //Starting position
+	ob5_element.translation = { -20.0F, 0.0F, 55.0F }; //Starting position
 	ob5_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	ob5_node = ScenegraphNode(6, &ob5_element, &shader);
 	scenegraph.addNode(&ob5_node);
@@ -930,7 +1017,7 @@ void initMap()
 	memcpy(ob6_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob6_element.mesh.mat.shininess = shininess;
 	ob6_element.mesh.mat.texCount = texcount;
-	ob6_element.translation = { 5.0F, 0.0F, -3.0F }; //Starting position
+	ob6_element.translation = { -20.0F, 0.0F, 65.0F }; //Starting position
 	ob6_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	ob6_node = ScenegraphNode(7, &ob6_element, &shader);
 	scenegraph.addNode(&ob6_node);
