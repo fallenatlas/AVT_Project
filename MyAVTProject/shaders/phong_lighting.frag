@@ -3,6 +3,11 @@
 #define NUM_POINT_LIGHTS 6
 #define NUM_SPOT_LIGHTS 2
 
+uniform int texMode;
+uniform sampler2D texmap;
+uniform sampler2D texmap1;
+uniform sampler2D texmap2;
+
 struct DirLight {
 	vec4 direction;
 };
@@ -41,6 +46,7 @@ in Data {
 	vec3 normal;
 	vec3 eye;
 	vec3 lightDir;
+	vec2 tex_coord;
 } DataIn;
 
 vec4 calculateDirLight(DirLight light, vec3 n, vec3 e);
@@ -78,6 +84,7 @@ void main()
 vec4 calculateDirLight(DirLight light, vec3 n, vec3 e)
 {
 	vec4 spec = vec4(0.0);
+	vec4 texel, texel1; 
 
 	vec3 lightDir = normalize(vec3(light.direction)); //fragPos can be -eye
 	float intensity = max(dot(n,lightDir), 0.0);
@@ -88,12 +95,33 @@ vec4 calculateDirLight(DirLight light, vec3 n, vec3 e)
 		spec = mat.specular * pow(intSpec, mat.shininess);
 	}
 	
-	return intensity * mat.diffuse + spec;
+	if(texMode == 0) // modulate diffuse color with texel color
+	{
+		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
+		return intensity * mat.diffuse + spec;
+	}
+	if(texMode == 1) // modulate diffuse color with texel color
+	{
+		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
+		return intensity * mat.diffuse * texel + spec;
+	}
+	else if (texMode == 2) // diffuse color is replaced by texel color, with specular area or ambient (0.1*texel)
+	{
+		texel = texture(texmap, DataIn.tex_coord);  // texel from stone.tga
+		return intensity*texel + spec;
+	}
+	else // multitexturing
+	{
+		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
+		texel1 = texture(texmap1, DataIn.tex_coord);  // texel from checker.tga
+		return intensity * texel * texel1 + spec;
+	}
 }  
 
 vec4 calculatePointLight(PointLight light, vec3 n, vec3 e)
 {
 	vec4 spec = vec4(0.0);
+	vec4 texel, texel1; 
 
 	vec3 lightDir = normalize(vec3(light.position) + DataIn.eye);
     float intensity = max(dot(n,lightDir), 0.0);
@@ -104,12 +132,33 @@ vec4 calculatePointLight(PointLight light, vec3 n, vec3 e)
 		spec = mat.specular * pow(intSpec, mat.shininess);
 	}
 	
-	return intensity * mat.diffuse + spec;
+	if(texMode == 0) // modulate diffuse color with texel color
+	{
+		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
+		return intensity * mat.diffuse + spec;
+	}
+	if(texMode == 1) // modulate diffuse color with texel color
+	{
+		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
+		return intensity * mat.diffuse * texel + spec;
+	}
+	else if (texMode == 2) // diffuse color is replaced by texel color, with specular area or ambient (0.1*texel)
+	{
+		texel = texture(texmap, DataIn.tex_coord);  // texel from stone.tga
+		return intensity*texel + spec;
+	}
+	else // multitexturing
+	{
+		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
+		texel1 = texture(texmap1, DataIn.tex_coord);  // texel from checker.tga
+		return intensity * texel * texel1 + spec;
+	}
 }
 
 vec4 calculateSpotLight(SpotLight light, vec3 n, vec3 e) // should be just position for now
 {
 	vec4 spec = vec4(0.0);
+	vec4 texel, texel1; 
 
 	vec3 lightDir = normalize(vec3(light.position) + DataIn.eye);
 	float theta = dot(lightDir, normalize(vec3(-light.direction)));
@@ -125,7 +174,27 @@ vec4 calculateSpotLight(SpotLight light, vec3 n, vec3 e) // should be just posit
 			float intSpec = max(dot(h,n), 0.0);
 			spec = mat.specular * pow(intSpec, mat.shininess) * att;
 		}
-		return intensity * mat.diffuse + spec;
+		if(texMode == 0) // modulate diffuse color with texel color
+		{
+			texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
+			return intensity * mat.diffuse + spec;
+		}
+		if(texMode == 1) // modulate diffuse color with texel color
+		{
+			texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
+			return intensity * mat.diffuse * texel + spec;
+		}
+		else if (texMode == 2) // diffuse color is replaced by texel color, with specular area or ambient (0.1*texel)
+		{
+			texel = texture(texmap, DataIn.tex_coord);  // texel from stone.tga
+			return intensity*texel + spec;
+		}
+		else // multitexturing
+		{
+			texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
+			texel1 = texture(texmap1, DataIn.tex_coord);  // texel from checker.tga
+			return intensity * texel * texel1 + spec;
+		}
 	}
 
 	return vec4(0.0);

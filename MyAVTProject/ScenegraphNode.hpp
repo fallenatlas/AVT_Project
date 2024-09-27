@@ -16,7 +16,7 @@ extern float mNormal3x3[9];
 class ScenegraphNode {
   public:
     ScenegraphNode();
-    ScenegraphNode(int id, SceneElement* element, VSShaderLib* shader);
+    ScenegraphNode(int id, SceneElement* element, VSShaderLib* shader, int texture);
     ~ScenegraphNode();
     std::vector<ScenegraphNode*> getChildren();
 
@@ -34,6 +34,7 @@ class ScenegraphNode {
     std::vector<ScenegraphNode*> Children;
     ScenegraphNode* Parent;
     int ObjectId;
+    int TextureMode;
 
 };
 

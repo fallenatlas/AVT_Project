@@ -5,10 +5,11 @@
 
 ScenegraphNode::ScenegraphNode() {}
 
-ScenegraphNode::ScenegraphNode(int id, SceneElement* element, VSShaderLib* shader) {
+ScenegraphNode::ScenegraphNode(int id, SceneElement* element, VSShaderLib* shader, int texture) {
     ObjectId = id;
     Element = element;
     Shader = shader;
+    TextureMode = texture;
 }
 
 ScenegraphNode::~ScenegraphNode() {}
@@ -33,6 +34,7 @@ void ScenegraphNode::draw() {
         GLint vm_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "m_viewModel");
         GLint normal_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "m_normal");
         GLint lPos_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "l_pos");
+        GLint texMode_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "texMode"); // different modes of texturing
 
         // send the material
         loc = glGetUniformLocation(Shader->getProgramIndex(), "mat.ambient");
@@ -50,6 +52,7 @@ void ScenegraphNode::draw() {
         glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
         computeNormalMatrix3x3();
         glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+        glUniform1i(texMode_uniformId, TextureMode);
 
         // Render mesh
         glBindVertexArray(Element->mesh.vao);

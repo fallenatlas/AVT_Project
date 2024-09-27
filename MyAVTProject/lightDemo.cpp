@@ -35,6 +35,7 @@
 #include "Scenegraph.hpp"
 #include "boat.h"
 #include "aabb.h"
+#include "Texture_Loader.h"
 
 #include "avtFreeType.h"
 
@@ -71,11 +72,8 @@ extern float mCompMatrix[COUNT_COMPUTED_MATRICES][16];
 /// The normal matrix
 extern float mNormal3x3[9];
 
-GLint pvm_uniformId;
-GLint vm_uniformId;
-GLint normal_uniformId;
-GLint lPos_uniformId;
 GLint tex_loc, tex_loc1, tex_loc2;
+GLuint TextureArray[3];
 	
 // Cameras
 int activeCamera = 0;
@@ -122,6 +120,10 @@ bool key_s_is_pressed = false;
 // Timer
 float monster_speed_timer = 0;
 const float RESPAWN_TIME = 5.0F;
+
+// Textures
+const int NO_TEXTURE = 0;
+const int WOOD_TEXTURE = 1;
 
 // Scene Nodes
 ScenegraphNode water_node;
@@ -286,6 +288,11 @@ void handle_collisions() {
 
 }
 
+bool paddle_is_in_the_water(SceneElement paddle) {
+	return (paddle.rotation[0] >= 0 && ((int)paddle.rotation[0] % 360 < 55 || (int)paddle.rotation[0] % 360 > 310)) ||
+		paddle.rotation[0] < 0 && ((int)paddle.rotation[0] % 360 > -50 || (int)paddle.rotation[0] % 360 < -305);
+}
+
 void haddle_movement() {
 	int rotation_dir = 1;
 	if (key_s_is_pressed)
@@ -309,8 +316,7 @@ void haddle_movement() {
 
 	if (key_a_is_pressed) {
 		left_paddle_node.spin(rotation);
-		if ((int)left_paddle_element.rotation[0] % 360 < 55 ||
-			(int)left_paddle_element.rotation[0] % 360 > 310) {
+		if (paddle_is_in_the_water(left_paddle_element)) {
 			boat.increaseSpeed(boat.acceleration * rotation_dir);
 			rotation = { 1.0F * rotation_dir, 0, 0, 0 };
 			boat_node.spin(rotation);
@@ -323,8 +329,7 @@ void haddle_movement() {
 
 	if (key_d_is_pressed) {
 		right_paddle_node.spin(rotation);
-		if ((int)right_paddle_element.rotation[0] % 360 < 55 ||
-			(int)right_paddle_element.rotation[0] % 360 > 310) {
+		if (paddle_is_in_the_water(right_paddle_element)) {
 			boat.increaseSpeed(boat.acceleration * rotation_dir);
 			rotation = { -1.0F * rotation_dir, 0, 0, 0 };
 			boat_node.spin(rotation);
@@ -516,6 +521,19 @@ void renderScene(void) {
 	// use our shader
 	
 	glUseProgram(shader.getProgramIndex());
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[0]);  
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[1]);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[2]);
+
+	//Indicar aos tres samplers do GLSL quais os Texture Units a serem usados
+	glUniform1i(tex_loc, 0);  
+	glUniform1i(tex_loc1, 1); 
+	glUniform1i(tex_loc2, 2); 
 
 		//send the light position in eye coordinates
 		//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
@@ -797,7 +815,7 @@ GLuint setupShaders() {
 	glBindFragDataLocation(shader.getProgramIndex(), 0,"colorOut");
 	glBindAttribLocation(shader.getProgramIndex(), VERTEX_COORD_ATTRIB, "position");
 	glBindAttribLocation(shader.getProgramIndex(), NORMAL_ATTRIB, "normal");
-	//glBindAttribLocation(shader.getProgramIndex(), TEXTURE_COORD_ATTRIB, "texCoord");
+	glBindAttribLocation(shader.getProgramIndex(), TEXTURE_COORD_ATTRIB, "texCoord");
 	
 	glLinkProgram(shader.getProgramIndex());
 	printf("InfoLog for Model Rendering Shader\n%s\n\n", shaderText.getAllInfoLogs().c_str());
@@ -857,7 +875,7 @@ void initMap()
 	water_element.mesh.mat.texCount = texcount;
 	water_element.translation = { 0.0F, 0.0F, 0.0F };
 	water_element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
-	water_node = ScenegraphNode(1, &water_element, &shader);
+	water_node = ScenegraphNode(1, &water_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&water_node);
 	
 	// Obstacles ----------------------------------------
@@ -872,7 +890,7 @@ void initMap()
 	ob1_element.mesh.mat.texCount = texcount;
 	ob1_element.translation = { 80.0F, 0.0F, 0.0F }; //Starting position
 	ob1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob1_node = ScenegraphNode(2, &ob1_element, &shader);
+	ob1_node = ScenegraphNode(2, &ob1_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&ob1_node);
 
 	ob2_element.mesh = createCylinder(2.0f, 0.4f, 20);
@@ -884,7 +902,7 @@ void initMap()
 	ob2_element.mesh.mat.texCount = texcount;
 	ob2_element.translation = { -1.0F, 0.0F, -80.0F }; //Starting position
 	ob2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob2_node = ScenegraphNode(3, &ob2_element, &shader);
+	ob2_node = ScenegraphNode(3, &ob2_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&ob2_node);
 
 	ob3_element.mesh = createCylinder(2.0f, 0.4f, 20);
@@ -896,7 +914,7 @@ void initMap()
 	ob3_element.mesh.mat.texCount = texcount;
 	ob3_element.translation = { 5.0F, 0.0F, 2.0F }; //Starting position
 	ob3_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob3_node = ScenegraphNode(4, &ob3_element, &shader);
+	ob3_node = ScenegraphNode(4, &ob3_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&ob3_node);
 
 	ob4_element.mesh = createCylinder(2.0f, 0.4f, 20);
@@ -908,7 +926,7 @@ void initMap()
 	ob4_element.mesh.mat.texCount = texcount;
 	ob4_element.translation = { 13.0F, 0.0F, 0.0F }; //Starting position
 	ob4_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob4_node = ScenegraphNode(5, &ob4_element, &shader);
+	ob4_node = ScenegraphNode(5, &ob4_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&ob4_node);
 
 	ob5_element.mesh = createCylinder(2.0f, 0.4f, 20);
@@ -920,7 +938,7 @@ void initMap()
 	ob5_element.mesh.mat.texCount = texcount;
 	ob5_element.translation = { 12.0F, 0.0F, 5.0F }; //Starting position
 	ob5_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob5_node = ScenegraphNode(6, &ob5_element, &shader);
+	ob5_node = ScenegraphNode(6, &ob5_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&ob5_node);
 
 	ob6_element.mesh = createCylinder(2.0f, 0.4f, 20);
@@ -932,7 +950,7 @@ void initMap()
 	ob6_element.mesh.mat.texCount = texcount;
 	ob6_element.translation = { 5.0F, 0.0F, -3.0F }; //Starting position
 	ob6_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	ob6_node = ScenegraphNode(7, &ob6_element, &shader);
+	ob6_node = ScenegraphNode(7, &ob6_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&ob6_node);
 
 
@@ -946,7 +964,7 @@ void initMap()
 	house1_element.mesh.mat.texCount = texcount;
 	house1_element.translation = { 3.0F, 0.0F, 7.0F }; //Starting position
 	house1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house1_node = ScenegraphNode(8, &house1_element, &shader);
+	house1_node = ScenegraphNode(8, &house1_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&house1_node);
 	
 	house2_element.mesh = createCube();
@@ -958,7 +976,7 @@ void initMap()
 	house2_element.mesh.mat.texCount = texcount;
 	house2_element.translation = { 10.0F, 0.0F, -9.0F }; //Starting position
 	house2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house2_node = ScenegraphNode(9, &house2_element, &shader);
+	house2_node = ScenegraphNode(9, &house2_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&house2_node);
 
 
@@ -973,7 +991,7 @@ void initMap()
 	debug1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
 	debug1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	debug1_element.scale = { 0.1F, 0.1F, 0.1F};
-	debug1_node = ScenegraphNode(10, &debug1_element, &shader);
+	debug1_node = ScenegraphNode(10, &debug1_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&debug1_node);
 
 	debug2_element.mesh = createCube();
@@ -986,7 +1004,7 @@ void initMap()
 	debug2_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
 	debug2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	debug2_element.scale = { 0.1F, 0.1F, 0.1F };
-	debug2_node = ScenegraphNode(11, &debug2_element, &shader);
+	debug2_node = ScenegraphNode(11, &debug2_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&debug2_node);
 }
 
@@ -1002,7 +1020,7 @@ void initBoat() {
 	boat_element.translation = initialBoatPos; //Starting position
 	boat_element.rotation = initialBoatRot;
 	boat_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	boat_node = ScenegraphNode(0, &boat_element, &shader);
+	boat_node = ScenegraphNode(0, &boat_element, &shader, 0);
 	scenegraph.addNode(&boat_node);
 
 	// Boat Body
@@ -1016,7 +1034,7 @@ void initBoat() {
 	boat_part2_element.translation = { -0.5F, 0.0F, -1.0F }; //Starting position
 	boat_part2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	boat_part2_element.scale = { 1.0F, 0.5F, 2.0F, 0.0F};
-	boat_part2_node = ScenegraphNode(0, &boat_part2_element, &shader);
+	boat_part2_node = ScenegraphNode(0, &boat_part2_element, &shader, WOOD_TEXTURE);
 	boat_node.addNode(&boat_part2_node);
 
 	// Boad Head
@@ -1030,14 +1048,14 @@ void initBoat() {
 	boat_part1_element.translation = { -0.5F, 0.0F, 1.0F }; //Starting position
 	boat_part1_element.rotation = { 45.0F, 0.0F, 1.0F, 0.0F };
 	boat_part1_element.scale = { (float)sqrt(0.5), 0.5F, (float)sqrt(0.5), 0.0F};
-	boat_part1_node = ScenegraphNode(0, &boat_part1_element, &shader);
+	boat_part1_node = ScenegraphNode(0, &boat_part1_element, &shader, WOOD_TEXTURE);
 	boat_node.addNode(&boat_part1_node);
 
 	// Left paddle as a whole
 	left_paddle_element.translation = { 0.7F, 0.8F, 0.0F }; //Starting position
 	left_paddle_element.rotation = { 0.0F, 1.0F, 0.0F, 0.0F };
 	left_paddle_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	left_paddle_node = ScenegraphNode(0, &left_paddle_element, &shader);
+	left_paddle_node = ScenegraphNode(0, &left_paddle_element, &shader, 0);
 	boat_node.addNode(&left_paddle_node);
 
 	// Left paddle stick
@@ -1051,7 +1069,7 @@ void initBoat() {
 	left_paddle_part1_element.translation = { 0.0F, -0.5F, 0.0F }; //Starting position
 	left_paddle_part1_element.rotation = { 45.0F, 0.0F, 0.0F, 1.0F };
 	left_paddle_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	left_paddle_part1_node = ScenegraphNode(0, &left_paddle_part1_element, &shader);
+	left_paddle_part1_node = ScenegraphNode(0, &left_paddle_part1_element, &shader, WOOD_TEXTURE);
 	left_paddle_node.addNode(&left_paddle_part1_node);
 
 	// Left paddle head
@@ -1065,14 +1083,14 @@ void initBoat() {
 	left_paddle_part2_element.translation = { 0.424F, -0.924F, 0.0F }; //Starting position
 	left_paddle_part2_element.rotation = { -245.0F, -1.0F, -0.5F, 1.0F };
 	left_paddle_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	left_paddle_part2_node = ScenegraphNode(0, &left_paddle_part2_element, &shader);
+	left_paddle_part2_node = ScenegraphNode(0, &left_paddle_part2_element, &shader, WOOD_TEXTURE);
 	left_paddle_node.addNode(&left_paddle_part2_node);
 
 	// Right paddle as a whole
 	right_paddle_element.translation = { -0.7F, 0.8F, 0.0F }; //Starting position
 	right_paddle_element.rotation = { 0.0F, 1.0F, 0.0F, 0.0F };
 	right_paddle_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	right_paddle_node = ScenegraphNode(0, &right_paddle_element, &shader);
+	right_paddle_node = ScenegraphNode(0, &right_paddle_element, &shader, WOOD_TEXTURE);
 	boat_node.addNode(&right_paddle_node);
 
 	// Right paddle stick
@@ -1086,7 +1104,7 @@ void initBoat() {
 	right_paddle_part1_element.translation = { 0.0F, -0.5F, 0.0F }; //Starting position
 	right_paddle_part1_element.rotation = { -45.0F, 0.0F, 0.0F, 1.0F };
 	right_paddle_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	right_paddle_part1_node = ScenegraphNode(0, &right_paddle_part1_element, &shader);
+	right_paddle_part1_node = ScenegraphNode(0, &right_paddle_part1_element, &shader, WOOD_TEXTURE);
 	right_paddle_node.addNode(&right_paddle_part1_node);
 
 	// Right paddle head
@@ -1100,7 +1118,7 @@ void initBoat() {
 	right_paddle_part2_element.translation = { -0.424F, -0.924F, 0.0F }; //Starting position
 	right_paddle_part2_element.rotation = { 245.0F, 1.0F, -0.5F, 1.0F };
 	right_paddle_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	right_paddle_part2_node = ScenegraphNode(0, &right_paddle_part2_element, &shader);
+	right_paddle_part2_node = ScenegraphNode(0, &right_paddle_part2_element, &shader, WOOD_TEXTURE);
 	right_paddle_node.addNode(&right_paddle_part2_node);
 }
 
@@ -1128,7 +1146,7 @@ void initCreatures() {
 	monster1_element.translation = { 3.0F, 0.5F, 0.0F }; //Starting position
 	monster1_element.rotation = { -90.0F, 0.0F, 1.0F, 0.0F };
 	monster1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster1_node = ScenegraphNode(0, &monster1_element, &shader);
+	monster1_node = ScenegraphNode(0, &monster1_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&monster1_node);
 
 	// Upper jaw
@@ -1142,7 +1160,7 @@ void initCreatures() {
 	monster1_part1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
 	monster1_part1_element.rotation = { 80.0F, 0.0F, 0.0F, 1.0F };
 	monster1_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster1_part1_node = ScenegraphNode(0, &monster1_part1_element, &shader);
+	monster1_part1_node = ScenegraphNode(0, &monster1_part1_element, &shader, NO_TEXTURE);
 	monster1_node.addNode(&monster1_part1_node);
 
 	// Lower jaw
@@ -1156,7 +1174,7 @@ void initCreatures() {
 	monster1_part2_element.translation = { 0.0F, -0.5F, 0.0F }; //Starting position
 	monster1_part2_element.rotation = { 100.0F, 0.0F, 0.0F, 1.0F };
 	monster1_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster1_part2_node = ScenegraphNode(0, &monster1_part2_element, &shader);
+	monster1_part2_node = ScenegraphNode(0, &monster1_part2_element, &shader, NO_TEXTURE);
 	monster1_node.addNode(&monster1_part2_node);
 
 	// Head
@@ -1170,7 +1188,7 @@ void initCreatures() {
 	monster1_part3_element.translation = { 0.5F, -0.2F, 0.0F }; //Starting position
 	monster1_part3_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
 	monster1_part3_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster1_part3_node = ScenegraphNode(0, &monster1_part3_element, &shader);
+	monster1_part3_node = ScenegraphNode(0, &monster1_part3_element, &shader, NO_TEXTURE);
 	monster1_node.addNode(&monster1_part3_node);
 
 	// Body
@@ -1184,7 +1202,7 @@ void initCreatures() {
 	monster1_part4_element.translation = { 0.2F, -0.2F, 0.0F }; //Starting position
 	monster1_part4_element.rotation = { -95.0F, 0.0F, 0.0F, 1.0F };
 	monster1_part4_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster1_part4_node = ScenegraphNode(0, &monster1_part4_element, &shader);
+	monster1_part4_node = ScenegraphNode(0, &monster1_part4_element, &shader, NO_TEXTURE);
 	monster1_node.addNode(&monster1_part4_node);
 
 	// Left Eye
@@ -1198,7 +1216,7 @@ void initCreatures() {
 	monster1_part5_element.translation = { 0.2F, 0.35F, 0.3F }; //Starting position
 	monster1_part5_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
 	monster1_part5_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster1_part5_node = ScenegraphNode(0, &monster1_part5_element, &shader);
+	monster1_part5_node = ScenegraphNode(0, &monster1_part5_element, &shader, NO_TEXTURE);
 	monster1_node.addNode(&monster1_part5_node);
 	
 	// Right Eye
@@ -1212,7 +1230,7 @@ void initCreatures() {
 	monster1_part6_element.translation = { 0.2F, 0.35F, -0.3F }; //Starting position
 	monster1_part6_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
 	monster1_part6_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster1_part6_node = ScenegraphNode(0, &monster1_part6_element, &shader);
+	monster1_part6_node = ScenegraphNode(0, &monster1_part6_element, &shader, NO_TEXTURE);
 	monster1_node.addNode(&monster1_part6_node);
 
 
@@ -1220,7 +1238,7 @@ void initCreatures() {
 	monster2_element.translation = { 5.0F, 0.5F, 30.0F }; //Starting position
 	monster2_element.rotation = { -90.0F, 0.0F, 1.0F, 0.0F };
 	monster2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster2_node = ScenegraphNode(0, &monster2_element, &shader);
+	monster2_node = ScenegraphNode(0, &monster2_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&monster2_node);
 
 	// Upper jaw
@@ -1234,7 +1252,7 @@ void initCreatures() {
 	monster2_part1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
 	monster2_part1_element.rotation = { 80.0F, 0.0F, 0.0F, 1.0F };
 	monster2_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster2_part1_node = ScenegraphNode(0, &monster2_part1_element, &shader);
+	monster2_part1_node = ScenegraphNode(0, &monster2_part1_element, &shader, NO_TEXTURE);
 	monster2_node.addNode(&monster2_part1_node);
 
 	// Lower jaw
@@ -1248,7 +1266,7 @@ void initCreatures() {
 	monster2_part2_element.translation = { 0.0F, -0.5F, 0.0F }; //Starting position
 	monster2_part2_element.rotation = { 100.0F, 0.0F, 0.0F, 1.0F };
 	monster2_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster2_part2_node = ScenegraphNode(0, &monster2_part2_element, &shader);
+	monster2_part2_node = ScenegraphNode(0, &monster2_part2_element, &shader, NO_TEXTURE);
 	monster2_node.addNode(&monster2_part2_node);
 
 	// Head
@@ -1262,7 +1280,7 @@ void initCreatures() {
 	monster2_part3_element.translation = { 0.5F, -0.2F, 0.0F }; //Starting position
 	monster2_part3_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
 	monster2_part3_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster2_part3_node = ScenegraphNode(0, &monster2_part3_element, &shader);
+	monster2_part3_node = ScenegraphNode(0, &monster2_part3_element, &shader, NO_TEXTURE);
 	monster2_node.addNode(&monster2_part3_node);
 
 	// Body
@@ -1276,7 +1294,7 @@ void initCreatures() {
 	monster2_part4_element.translation = { 0.2F, -0.2F, 0.0F }; //Starting position
 	monster2_part4_element.rotation = { -95.0F, 0.0F, 0.0F, 1.0F };
 	monster2_part4_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster2_part4_node = ScenegraphNode(0, &monster2_part4_element, &shader);
+	monster2_part4_node = ScenegraphNode(0, &monster2_part4_element, &shader, NO_TEXTURE);
 	monster2_node.addNode(&monster2_part4_node);
 
 	// Left Eye
@@ -1290,7 +1308,7 @@ void initCreatures() {
 	monster2_part5_element.translation = { 0.2F, 0.35F, 0.3F }; //Starting position
 	monster2_part5_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
 	monster2_part5_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster2_part5_node = ScenegraphNode(0, &monster2_part5_element, &shader);
+	monster2_part5_node = ScenegraphNode(0, &monster2_part5_element, &shader, NO_TEXTURE);
 	monster2_node.addNode(&monster2_part5_node);
 
 	// Right Eye
@@ -1304,7 +1322,7 @@ void initCreatures() {
 	monster2_part6_element.translation = { 0.2F, 0.35F, -0.3F }; //Starting position
 	monster2_part6_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
 	monster2_part6_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	monster2_part6_node = ScenegraphNode(0, &monster2_part6_element, &shader);
+	monster2_part6_node = ScenegraphNode(0, &monster2_part6_element, &shader, NO_TEXTURE);
 	monster2_node.addNode(&monster2_part6_node);
 
 	respawn_monster(&monster1_node, &monster1);
@@ -1325,50 +1343,17 @@ void init()
 	}
 	ilInit();
 
+	glGenTextures(3, TextureArray);
+	Texture2D_Loader(TextureArray, "stone.tga", 0);
+	Texture2D_Loader(TextureArray, "checker.png", 1);
+	Texture2D_Loader(TextureArray, "lightwood.tga", 2);
+
 	/// Initialization of freetype library with font_name file
 	freeType_init(font_name);
 
 	cameras[0] = Camera(0, 10.0F, 180.0F, 20.0F);
 	cameras[1] = Camera(0, 20.0F, 0.0F, 90.0F);
 	cameras[2] = Camera(1, 20.0F, 0.0F, 90.0F);
-	
-	// create geometry and VAO of the pawn
-	/*
-	element.mesh = createPawn();
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 0, 0, 0 }; //Starting position
-	myElements.push_back(element);
-
-	
-	// create geometry and VAO of the sphere
-	element.mesh = createSphere(1.0f, 20);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 2, 0, 1 }; //Starting position
-	myElements.push_back(element);
-	*/
-	
-	/*
-	// create geometry and VAO of the 
-	element.mesh = createCone(1.5f, 0.5f, 20);
-	memcpy(element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	element.mesh.mat.shininess = shininess;
-	element.mesh.mat.texCount = texcount;
-	element.translation = { 0, 0, 1 }; //Starting position
-	myElements.push_back(element);
-	*/
 
 	initBoat();
 	initMap();
