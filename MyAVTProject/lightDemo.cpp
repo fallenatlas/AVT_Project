@@ -923,7 +923,7 @@ void initMap()
 	island1_element.translation = { 50.0F, 0.0F, -70.0F }; //Starting position
 	island1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island1_element.scale = { 10.0f, 0.5f, 10.0f };
-	island1_node = ScenegraphNode(0, &island1_element, &shader);
+	island1_node = ScenegraphNode(0, &island1_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&island1_node);
 
 	island2_element.mesh = createCube();
@@ -936,7 +936,7 @@ void initMap()
 	island2_element.translation = { 30.0F, 0.0F, 0.0F }; //Starting position
 	island2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island2_element.scale = { 10.0f, 0.5f, 10.0f };
-	island2_node = ScenegraphNode(0, &island2_element, &shader);
+	island2_node = ScenegraphNode(0, &island2_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&island2_node);
 	
 	island3_element.mesh = createCube();
@@ -949,7 +949,7 @@ void initMap()
 	island3_element.translation = { 10.0F, 0.0F, -10.0F }; //Starting position
 	island3_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island3_element.scale = { 10.0f, 0.5f, 10.0f };
-	island3_node = ScenegraphNode(0, &island3_element, &shader);
+	island3_node = ScenegraphNode(0, &island3_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&island3_node);
 	
 	island4_element.mesh = createCube();
@@ -962,7 +962,7 @@ void initMap()
 	island4_element.translation = { -20.0F, 0.0F, 40.0F }; //Starting position
 	island4_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island4_element.scale = { 10.0f, 0.5f, 10.0f };
-	island4_node = ScenegraphNode(0, &island4_element, &shader);
+	island4_node = ScenegraphNode(0, &island4_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&island4_node);
 	
 	// Obstacles ----------------------------------------
