@@ -15,6 +15,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <cstdlib>
 
 // include GLEW to access OpenGL 3.3 functions
 #include <GL/glew.h>
@@ -58,6 +59,7 @@ const string font_name = "fonts/arial.ttf";
 //Vector with meshes
 Boat boat;
 Boat monster1;
+Boat monster2;
 
 //External array storage defined in AVTmathLib.cpp
 
@@ -116,6 +118,10 @@ bool key_a_is_pressed = false;
 bool key_d_is_pressed = false;
 bool key_s_is_pressed = false;
 
+// Timer
+float monster_speed_timer = 0;
+const float RESPAWN_TIME = 5.0F;
+
 // Scene Nodes
 ScenegraphNode water_node;
 ScenegraphNode ob1_node;
@@ -142,6 +148,13 @@ ScenegraphNode monster1_part3_node;
 ScenegraphNode monster1_part4_node;
 ScenegraphNode monster1_part5_node;
 ScenegraphNode monster1_part6_node;
+ScenegraphNode monster2_node;
+ScenegraphNode monster2_part1_node;
+ScenegraphNode monster2_part2_node;
+ScenegraphNode monster2_part3_node;
+ScenegraphNode monster2_part4_node;
+ScenegraphNode monster2_part5_node;
+ScenegraphNode monster2_part6_node;
 
 // Scene Elements
 SceneElement water_element;
@@ -169,6 +182,13 @@ SceneElement monster1_part3_element;
 SceneElement monster1_part4_element;
 SceneElement monster1_part5_element;
 SceneElement monster1_part6_element;
+SceneElement monster2_element;
+SceneElement monster2_part1_element;
+SceneElement monster2_part2_element;
+SceneElement monster2_part3_element;
+SceneElement monster2_part4_element;
+SceneElement monster2_part5_element;
+SceneElement monster2_part6_element;
 
 
 void timer(int value)
@@ -227,20 +247,100 @@ void haddle_movement() {
 	}
 }
 
+void respawn_monster(ScenegraphNode* monster_node, Boat* monster) {
+	int index = rand() % 4;
+	vector<float> respawn_position = { 0.0, 0.5, 0.0 };
+	vector<float> respawn_rotation = { 0.0, 0.0, 1.0, 0.0};
+
+	switch (index) {
+		case 0:
+			respawn_position[0] = 80.0F;
+			respawn_position[2] = rand() % 160 - 80;
+			respawn_rotation[0] = rand() % 45;
+			break;
+		case 1:
+			respawn_position[0] = -80.0F;
+			respawn_position[2] = rand() % 160 - 80;
+			respawn_rotation[0] = rand() % 45 + 180;
+			break;
+		case 2:
+			respawn_position[0] = rand() % 160 - 80;
+			respawn_position[2] = 80.0F;
+			respawn_rotation[0] = rand() % 45 + 270;
+			break;
+		case 3:
+			respawn_position[0] = rand() % 160 - 80;
+			respawn_position[2] = -80.0F;
+			respawn_rotation[0] = rand() % 45 + 90;
+			break;
+	}
+
+	monster_node->position(respawn_position);
+	monster_node->setRotation(respawn_rotation);
+	monster->initRotation = respawn_rotation[0];
+	respawn_rotation[0] -= 90; //Because the model is sideways... ops
+	monster->setDirection(respawn_rotation);
+}
+
 void haddle_monster_movement() {
 	float deltaTime = 1.0F / 60.0F;
-	std::vector<float> movement{ 0.0F, 0.0F, 0.0F };
+	std::vector<float> movement1{ 0.0F, 0.0F, 0.0F };
+	std::vector<float> movement2{ 0.0F, 0.0F, 0.0F };
 
-	for (int i = 0; i < monster1_element.translation.size(); i++) {
-		movement[i] = monster1.speed * monster1.direction[i] * deltaTime;
+	// Monster respawn timer
+	if (monster1.respawnTimer > 0)
+		monster1.respawnTimer -= deltaTime;
+	if (monster2.respawnTimer > 0)
+		monster2.respawnTimer -= deltaTime;
+
+	// Increase monster speed with game time
+	monster_speed_timer += deltaTime;
+	if (monster_speed_timer >= 5 && monster1.speed < monster1.maxSpeed) { // every 5 sec
+		monster1.speed += 2;
+		monster2.speed += 2;
+		monster_speed_timer = 0;
 	}
-	monster1_node.move(movement);
+
+	// Monster wiggle
+	if (monster1_element.rotation[0] > monster1.initRotation + 20 || monster1_element.rotation[0] < monster1.initRotation - 20)
+		monster1.rotationDir *= -1;
+	if (monster2_element.rotation[0] > monster2.initRotation + 20 || monster2_element.rotation[0] < monster2.initRotation - 20)
+		monster2.rotationDir *= -1;
+	std::vector<float> rotation = { monster1.rotationDir, 0, 0, 0 };
+	monster1_node.spin(rotation);
+	rotation = { monster2.rotationDir, 0, 0, 0 };
+	monster2_node.spin(rotation);
+
+	// Forward movement
+	for (int i = 0; i < monster1_element.translation.size(); i++) {
+		movement1[i] = monster1.speed * monster1.direction[i] * deltaTime;
+		movement2[i] = monster2.speed * monster2.direction[i] * deltaTime;
+	}
+	monster1_node.move(movement1);
+	monster2_node.move(movement2);
+
+	// Out of bounds
+	if ((monster1_element.translation[0] > 80 || monster1_element.translation[0] < -80 ||
+		monster1_element.translation[2] > 80 || monster1_element.translation[2] < -80) &&
+		monster1_node.isActive == true) {
+		monster1_node.isActive = false;
+		monster1.respawnTimer = RESPAWN_TIME;
+	}
+	if ((monster2_element.translation[0] > 80 || monster2_element.translation[0] < -80 ||
+		monster2_element.translation[2] > 80 || monster2_element.translation[2] < -80) &&
+		monster2_node.isActive == true) {
+		monster2_node.isActive = false;
+		monster2.respawnTimer = RESPAWN_TIME;
+	}
 
 	// Respawn
-	if (monster1_element.translation[0] > 80 || monster1_element.translation[0] < -80 ||
-		monster1_element.translation[2] > 80 || monster1_element.translation[2] < -80) {
-		vector<float> spawn = { 0.0F, 0.5F, 0.0F }; //TODO: spawn on the edges with rand rotation
-		monster1_node.position(spawn);
+	if (!monster1_node.isActive && monster1.respawnTimer <= 0) {
+		monster1_node.isActive = true;
+		respawn_monster(&monster1_node, &monster1);
+	}
+	if (!monster2_node.isActive && monster2.respawnTimer <= 0) {
+		monster2_node.isActive = true;
+		respawn_monster(&monster2_node, &monster2);
 	}
 }
 
@@ -476,21 +576,19 @@ void processKeys(unsigned char key, int xx, int yy)
 void processUpKeys(unsigned char key, int xx, int yy)
 {
 	switch (key) {
-
-	case 'a':
-		key_a_is_pressed = false;
-		break;
-	case 'd':
-		key_d_is_pressed = false;
-		break;
-	case 's':
-		key_s_is_pressed = false;
-		break;
-	case 'o':
-		boat.acceleration = 0.4;
-		boat.rowing_speed = 10.0;
-		break;
-
+		case 'a':
+			key_a_is_pressed = false;
+			break;
+		case 'd':
+			key_d_is_pressed = false;
+			break;
+		case 's':
+			key_s_is_pressed = false;
+			break;
+		case 'o':
+			boat.acceleration = 0.4;
+			boat.rowing_speed = 10.0;
+			break;
 	}
 }
 
@@ -604,13 +702,13 @@ GLuint setupShaders() {
 	shader.init();
 	shader.loadShader(VSShaderLib::VERTEX_SHADER, "shaders/phong_lighting.vert");
 	shader.loadShader(VSShaderLib::FRAGMENT_SHADER, "shaders/phong_lighting.frag");
-
+	
 	// set semantics for the shader variables
 	glBindFragDataLocation(shader.getProgramIndex(), 0,"colorOut");
 	glBindAttribLocation(shader.getProgramIndex(), VERTEX_COORD_ATTRIB, "position");
 	glBindAttribLocation(shader.getProgramIndex(), NORMAL_ATTRIB, "normal");
 	//glBindAttribLocation(shader.getProgramIndex(), TEXTURE_COORD_ATTRIB, "texCoord");
-
+	
 	glLinkProgram(shader.getProgramIndex());
 	printf("InfoLog for Model Rendering Shader\n%s\n\n", shaderText.getAllInfoLogs().c_str());
 
@@ -648,7 +746,6 @@ GLuint setupShaders() {
 
 void initMap()
 {
-	
 	float amb[] = { 0.2f, 0.15f, 0.1f, 1.0f };
 	float diff[] = { 0.8f, 0.6f, 0.4f, 1.0f };
 	float spec[] = { 0.8f, 0.8f, 0.8f, 1.0f };
@@ -683,7 +780,7 @@ void initMap()
 	memcpy(ob1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob1_element.mesh.mat.shininess = shininess;
 	ob1_element.mesh.mat.texCount = texcount;
-	ob1_element.translation = { -1.0F, 0.0F, 0.0F }; //Starting position
+	ob1_element.translation = { 80.0F, 0.0F, 0.0F }; //Starting position
 	ob1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	ob1_node = ScenegraphNode(2, &ob1_element, &shader);
 	scenegraph.addNode(&ob1_node);
@@ -695,7 +792,7 @@ void initMap()
 	memcpy(ob2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob2_element.mesh.mat.shininess = shininess;
 	ob2_element.mesh.mat.texCount = texcount;
-	ob2_element.translation = { -1.0F, 0.0F, 5.0F }; //Starting position
+	ob2_element.translation = { -1.0F, 0.0F, -80.0F }; //Starting position
 	ob2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	ob2_node = ScenegraphNode(3, &ob2_element, &shader);
 	scenegraph.addNode(&ob2_node);
@@ -901,15 +998,20 @@ void initCreatures() {
 	float diff1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	float spec1[] = { 0.7f, 0.3f, 0.3f, 1.0f };
 
+	// Set monster movement parameters
+	monster1.speed = 5;
+	monster1.maxSpeed = 20;
+	monster2.speed = 5;
+	monster2.maxSpeed = 20;
+	monster1.rotationDir = 1;
+	monster2.rotationDir = -1;
+
 	// Monster as a whole
 	monster1_element.translation = { 3.0F, 0.5F, 0.0F }; //Starting position
-	monster1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	monster1_element.rotation = { -90.0F, 0.0F, 1.0F, 0.0F };
 	monster1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	monster1_node = ScenegraphNode(0, &monster1_element, &shader);
 	scenegraph.addNode(&monster1_node);
-
-	monster1.speed = 5;
-	monster1.direction = {-1, 0, 0};
 
 	// Upper jaw
 	monster1_part1_element.mesh = createCone(1.5f, 0.5f, 20);
@@ -994,6 +1096,103 @@ void initCreatures() {
 	monster1_part6_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	monster1_part6_node = ScenegraphNode(0, &monster1_part6_element, &shader);
 	monster1_node.addNode(&monster1_part6_node);
+
+
+	// Monster as a whole
+	monster2_element.translation = { 5.0F, 0.5F, 30.0F }; //Starting position
+	monster2_element.rotation = { -90.0F, 0.0F, 1.0F, 0.0F };
+	monster2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster2_node = ScenegraphNode(0, &monster2_element, &shader);
+	scenegraph.addNode(&monster2_node);
+
+	// Upper jaw
+	monster2_part1_element.mesh = createCone(1.5f, 0.5f, 20);
+	memcpy(monster2_part1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(monster2_part1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(monster2_part1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(monster2_part1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster2_part1_element.mesh.mat.shininess = shininess;
+	monster2_part1_element.mesh.mat.texCount = texcount;
+	monster2_part1_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	monster2_part1_element.rotation = { 80.0F, 0.0F, 0.0F, 1.0F };
+	monster2_part1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster2_part1_node = ScenegraphNode(0, &monster2_part1_element, &shader);
+	monster2_node.addNode(&monster2_part1_node);
+
+	// Lower jaw
+	monster2_part2_element.mesh = createCone(1.5f, 0.5f, 20);
+	memcpy(monster2_part2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(monster2_part2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(monster2_part2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(monster2_part2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster2_part2_element.mesh.mat.shininess = shininess;
+	monster2_part2_element.mesh.mat.texCount = texcount;
+	monster2_part2_element.translation = { 0.0F, -0.5F, 0.0F }; //Starting position
+	monster2_part2_element.rotation = { 100.0F, 0.0F, 0.0F, 1.0F };
+	monster2_part2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster2_part2_node = ScenegraphNode(0, &monster2_part2_element, &shader);
+	monster2_node.addNode(&monster2_part2_node);
+
+	// Head
+	monster2_part3_element.mesh = createSphere(0.85f, 20);
+	memcpy(monster2_part3_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(monster2_part3_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(monster2_part3_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(monster2_part3_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster2_part3_element.mesh.mat.shininess = shininess;
+	monster2_part3_element.mesh.mat.texCount = texcount;
+	monster2_part3_element.translation = { 0.5F, -0.2F, 0.0F }; //Starting position
+	monster2_part3_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
+	monster2_part3_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster2_part3_node = ScenegraphNode(0, &monster2_part3_element, &shader);
+	monster2_node.addNode(&monster2_part3_node);
+
+	// Body
+	monster2_part4_element.mesh = createCone(10.0f, 0.7f, 20);
+	memcpy(monster2_part4_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(monster2_part4_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(monster2_part4_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(monster2_part4_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster2_part4_element.mesh.mat.shininess = shininess;
+	monster2_part4_element.mesh.mat.texCount = texcount;
+	monster2_part4_element.translation = { 0.2F, -0.2F, 0.0F }; //Starting position
+	monster2_part4_element.rotation = { -95.0F, 0.0F, 0.0F, 1.0F };
+	monster2_part4_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster2_part4_node = ScenegraphNode(0, &monster2_part4_element, &shader);
+	monster2_node.addNode(&monster2_part4_node);
+
+	// Left Eye
+	monster2_part5_element.mesh = createSphere(0.2f, 20);
+	memcpy(monster2_part5_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(monster2_part5_element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(monster2_part5_element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(monster2_part5_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster2_part5_element.mesh.mat.shininess = shininess;
+	monster2_part5_element.mesh.mat.texCount = texcount;
+	monster2_part5_element.translation = { 0.2F, 0.35F, 0.3F }; //Starting position
+	monster2_part5_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
+	monster2_part5_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster2_part5_node = ScenegraphNode(0, &monster2_part5_element, &shader);
+	monster2_node.addNode(&monster2_part5_node);
+
+	// Right Eye
+	monster2_part6_element.mesh = createSphere(0.2f, 20);
+	memcpy(monster2_part6_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(monster2_part6_element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(monster2_part6_element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(monster2_part6_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster2_part6_element.mesh.mat.shininess = shininess;
+	monster2_part6_element.mesh.mat.texCount = texcount;
+	monster2_part6_element.translation = { 0.2F, 0.35F, -0.3F }; //Starting position
+	monster2_part6_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
+	monster2_part6_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	monster2_part6_node = ScenegraphNode(0, &monster2_part6_element, &shader);
+	monster2_node.addNode(&monster2_part6_node);
+
+	respawn_monster(&monster1_node, &monster1);
+	respawn_monster(&monster2_node, &monster2);
+	monster1.setDirection(monster1_element.rotation);
+	monster2.setDirection(monster2_element.rotation);
 }
 
 void init()

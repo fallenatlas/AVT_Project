@@ -24,9 +24,11 @@ class ScenegraphNode {
     void move(std::vector<float> translation);
     void position(std::vector<float> position);
     void spin(std::vector<float> rotation);
+    void setRotation(std::vector<float> rotation);
     void addNode(ScenegraphNode* node);
     
     SceneElement* Element;
+    bool isActive = true;
   private:
     VSShaderLib* Shader;
     std::vector<ScenegraphNode*> Children;

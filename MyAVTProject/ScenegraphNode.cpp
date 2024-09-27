@@ -80,6 +80,12 @@ void ScenegraphNode::position(std::vector<float> position) {
     Element->translation[2] = position[2];
 }
 
+void ScenegraphNode::setRotation(std::vector<float> rotation) {
+    Element->rotation[0] = rotation[0];
+    Element->rotation[1] = rotation[1];
+    Element->rotation[2] = rotation[2];
+}
+
 void ScenegraphNode::spin(std::vector<float> rotation) {
     Element->rotation[0] += rotation[0];
     Element->rotation[1] += rotation[1];
