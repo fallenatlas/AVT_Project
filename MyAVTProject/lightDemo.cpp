@@ -305,7 +305,7 @@ void handle_collisions() {
 	collide_and_resolve(boat_aabb, island1_aabb, island1_element, false);
 	collide_and_resolve(boat_aabb, island2_aabb, island2_element, false);
 	collide_and_resolve(boat_aabb, island3_aabb, island3_element, false);
-	collide_and_resolve(boat_aabb, island3_aabb, island4_element, false);
+	collide_and_resolve(boat_aabb, island4_aabb, island4_element, false);
 	
 
 	// if cube is enemy reset boat at start
