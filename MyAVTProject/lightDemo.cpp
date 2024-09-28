@@ -135,6 +135,8 @@ ScenegraphNode ob5_node;
 ScenegraphNode ob6_node;
 ScenegraphNode house1_node;
 ScenegraphNode house2_node;
+ScenegraphNode house3_node;
+ScenegraphNode house4_node;
 ScenegraphNode boat_node;
 ScenegraphNode boat_part1_node;
 ScenegraphNode boat_part2_node;
@@ -145,6 +147,7 @@ ScenegraphNode right_paddle_node;
 ScenegraphNode right_paddle_part1_node;
 ScenegraphNode right_paddle_part2_node;
 ScenegraphNode monster1_node;
+ScenegraphNode monster1_aabb_box_node;
 ScenegraphNode monster1_part1_node;
 ScenegraphNode monster1_part2_node;
 ScenegraphNode monster1_part3_node;
@@ -152,6 +155,7 @@ ScenegraphNode monster1_part4_node;
 ScenegraphNode monster1_part5_node;
 ScenegraphNode monster1_part6_node;
 ScenegraphNode monster2_node;
+ScenegraphNode monster2_aabb_box_node;
 ScenegraphNode monster2_part1_node;
 ScenegraphNode monster2_part2_node;
 ScenegraphNode monster2_part3_node;
@@ -178,6 +182,8 @@ SceneElement ob5_element;
 SceneElement ob6_element;
 SceneElement house1_element;
 SceneElement house2_element;
+SceneElement house3_element;
+SceneElement house4_element;
 SceneElement boat_element;
 SceneElement boat_part1_element;
 SceneElement boat_part2_element;
@@ -188,6 +194,7 @@ SceneElement right_paddle_element;
 SceneElement right_paddle_part1_element;
 SceneElement right_paddle_part2_element;
 SceneElement monster1_element;
+SceneElement monster1_aabb_box_element;
 SceneElement monster1_part1_element;
 SceneElement monster1_part2_element;
 SceneElement monster1_part3_element;
@@ -195,6 +202,7 @@ SceneElement monster1_part4_element;
 SceneElement monster1_part5_element;
 SceneElement monster1_part6_element;
 SceneElement monster2_element;
+SceneElement monster2_aabb_box_element;
 SceneElement monster2_part1_element;
 SceneElement monster2_part2_element;
 SceneElement monster2_part3_element;
@@ -219,6 +227,16 @@ AABB island1_aabb;
 AABB island2_aabb;
 AABB island3_aabb;
 AABB island4_aabb;
+
+AABB ob1_aabb;
+AABB ob2_aabb;
+AABB ob3_aabb;
+AABB ob4_aabb;
+AABB ob5_aabb;
+AABB ob6_aabb;
+
+AABB monster1_aabb;
+AABB monster2_aabb;
 
 const std::vector<float> initialBoatPos = { 65.0F, 0.0F, -70.0F };
 const std::vector<float> initialBoatRot = { 0.0F, 0.0F, 1.0F, 0.0F };
@@ -260,11 +278,16 @@ void collide_and_resolve(AABB& boat_aabb, AABB& other_aabb, SceneElement& other_
 			pushDirection[2] = -pushDirection[2];
 		}
 
-		other_element.translation = { other_element.translation[0] + pushDirection[0] * info.penetration * boat.speed,
+		other_element.translation = { other_element.translation[0] + pushDirection[0] * info.penetration * abs(boat.speed),
 									  other_element.translation[1],
-									  other_element.translation[2] + pushDirection[2] * info.penetration * boat.speed };
+									  other_element.translation[2] + pushDirection[2] * info.penetration * abs(boat.speed) };
 		boat.speed = 0; // we might potentially need to change this to like velocity
 	}
+}
+
+void collide_and_resolve_monster(AABB& monster_aabb, AABB& other_aabb) {
+	auto info = monster_aabb.intersepts(other_aabb);
+	// respawn monster
 }
 
 void handle_collisions() {
@@ -294,32 +317,63 @@ void handle_collisions() {
 	AABB::getGlobalCubePoints(island4_element.mesh.transform, points1);
 	island4_aabb.updateWithVec(points1);
 
-	debug1_element.translation = island1_aabb.max;
-	debug2_element.translation = island1_aabb.min;
-
 	// update cylinder aabbs
+	points1.clear();
+	AABB::getGlobalCilinderPoints(ob1_element.mesh.transform, points1);
+	ob1_aabb.updateWithVec(points1);
+
+	points1.clear();
+	AABB::getGlobalCilinderPoints(ob2_element.mesh.transform, points1);
+	ob2_aabb.updateWithVec(points1);
+
+	points1.clear();
+	AABB::getGlobalCilinderPoints(ob3_element.mesh.transform, points1);
+	ob3_aabb.updateWithVec(points1);
+
+	points1.clear();
+	AABB::getGlobalCilinderPoints(ob4_element.mesh.transform, points1);
+	ob4_aabb.updateWithVec(points1);
+
+	points1.clear();
+	AABB::getGlobalCilinderPoints(ob5_element.mesh.transform, points1);
+	ob5_aabb.updateWithVec(points1);
+
+	points1.clear();
+	AABB::getGlobalCilinderPoints(ob6_element.mesh.transform, points1);
+	ob6_aabb.updateWithVec(points1);
 
 	// update monters aabbs
+	// make invis cube as child of main monster node
+	points1.clear();
+	AABB::getGlobalCubePoints(monster1_aabb_box_element.mesh.transform, points1);
+	monster1_aabb.updateWithVec(points1);
+
+	points1.clear();
+	AABB::getGlobalCubePoints(monster2_aabb_box_element.mesh.transform, points1);
+	monster2_aabb.updateWithVec(points1);
+
+	debug1_element.translation = monster1_aabb.max;
+	debug2_element.translation = monster1_aabb.min;
 
 	// test collision with test cube
 	collide_and_resolve(boat_aabb, island1_aabb, island1_element, false);
 	collide_and_resolve(boat_aabb, island2_aabb, island2_element, false);
 	collide_and_resolve(boat_aabb, island3_aabb, island3_element, false);
 	collide_and_resolve(boat_aabb, island4_aabb, island4_element, false);
+
+	collide_and_resolve(boat_aabb, ob1_aabb, ob1_element, false);
+	collide_and_resolve(boat_aabb, ob2_aabb, ob2_element, false);
+	collide_and_resolve(boat_aabb, ob3_aabb, ob3_element, false);
+	collide_and_resolve(boat_aabb, ob4_aabb, ob4_element, false);
+	collide_and_resolve(boat_aabb, ob5_aabb, ob3_element, false);
+	collide_and_resolve(boat_aabb, ob6_aabb, ob4_element, false);
 	
+	// test collision boat and monster
+	collide_and_resolve(boat_aabb, monster1_aabb, monster1_element, true);
+	collide_and_resolve(boat_aabb, monster2_aabb, monster2_element, true);
 
-	// if cube is enemy reset boat at start
-
-	// update aabb for every monster (the aabbs for houses and stuff are static)
-	//for (auto aabb : monster_aabbs) {
-	//	aabb.update()
-	//}
-
-	// check for collisons between boat and every other object
-	//for (auto aabb : obstacles) {
-	//
-	//}
-
+	// test collision monster and other objs
+	//collide_and_resolve_monster(AABB & monster_aabb, AABB & other_aabb)
 }
 
 bool paddle_is_in_the_water(SceneElement paddle) {
@@ -964,6 +1018,60 @@ void initMap()
 	island4_element.scale = { 10.0f, 0.5f, 10.0f };
 	island4_node = ScenegraphNode(0, &island4_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&island4_node);
+
+	// Houses ------------------------------------------
+	house1_element.mesh = createCube();
+	memcpy(house1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(house1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(house1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(house1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	house1_element.mesh.mat.shininess = shininess;
+	house1_element.mesh.mat.texCount = texcount;
+	house1_element.translation = { 55.0F, 0.5F, -65.0F }; //Starting position
+	house1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	house1_node = ScenegraphNode(8, &house1_element, &shader, NO_TEXTURE);
+	scenegraph.addNode(&house1_node);
+
+	house2_element.mesh = createCube();
+	memcpy(house2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(house2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(house2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(house2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	house2_element.mesh.mat.shininess = shininess;
+	house2_element.mesh.mat.texCount = texcount;
+	house2_element.translation = { 35.0F, 0.5F, 5.0F }; //Starting position
+	house2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	house2_node = ScenegraphNode(9, &house2_element, &shader, NO_TEXTURE);
+	scenegraph.addNode(&house2_node);
+
+	house3_element.mesh = createCube();
+	memcpy(house3_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(house3_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(house3_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(house3_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	house3_element.mesh.mat.shininess = shininess;
+	house3_element.mesh.mat.texCount = texcount;
+	house3_element.translation = { 15.0F, 0.5F, -5.0F }; //Starting position
+	house3_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	house3_node = ScenegraphNode(9, &house3_element, &shader, NO_TEXTURE);
+	scenegraph.addNode(&house3_node);
+
+	house4_element.mesh = createCube();
+	memcpy(house4_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(house4_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(house4_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(house4_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	house4_element.mesh.mat.shininess = shininess;
+	house4_element.mesh.mat.texCount = texcount;
+	house4_element.translation = { -15.0F, 0.5F, 45.0F }; //Starting position
+	house4_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	house4_node = ScenegraphNode(9, &house4_element, &shader, NO_TEXTURE);
+	scenegraph.addNode(&house4_node);
+
+
+	// Trees --------------------------------------------
+
+
 	
 	// Obstacles ----------------------------------------
 	shininess = 100.0f;
@@ -1039,33 +1147,6 @@ void initMap()
 	ob6_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	ob6_node = ScenegraphNode(7, &ob6_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&ob6_node);
-
-
-	// Houses ------------------------------------------
-	house1_element.mesh = createCube();
-	memcpy(house1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(house1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(house1_element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(house1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	house1_element.mesh.mat.shininess = shininess;
-	house1_element.mesh.mat.texCount = texcount;
-	house1_element.translation = { 3.0F, 0.0F, 7.0F }; //Starting position
-	house1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house1_node = ScenegraphNode(8, &house1_element, &shader, NO_TEXTURE);
-	scenegraph.addNode(&house1_node);
-	
-	house2_element.mesh = createCube();
-	memcpy(house2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(house2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(house2_element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(house2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	house2_element.mesh.mat.shininess = shininess;
-	house2_element.mesh.mat.texCount = texcount;
-	house2_element.translation = { 10.0F, 0.0F, -9.0F }; //Starting position
-	house2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house2_node = ScenegraphNode(9, &house2_element, &shader, NO_TEXTURE);
-	scenegraph.addNode(&house2_node);
-
 
 	// debug boat aabb
 	debug1_element.mesh = createCube();
@@ -1221,6 +1302,10 @@ void initCreatures() {
 	float diff1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	float spec1[] = { 0.7f, 0.3f, 0.3f, 1.0f };
 
+	float amb2[] = { 1.0F, 0.0F, 0.0F, 0.0F };
+	float diff2[] = { 1.0f, 0.0f, 0.0f, 0.0f };
+	float spec2[] = { 0.7f, 0.3f, 0.3f, 0.0f };
+
 	// Set monster movement parameters
 	monster1.speed = 5;
 	monster1.maxSpeed = 20;
@@ -1235,6 +1320,19 @@ void initCreatures() {
 	monster1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	monster1_node = ScenegraphNode(0, &monster1_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&monster1_node);
+
+	monster1_aabb_box_element.mesh = createCube();
+	memcpy(monster1_aabb_box_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
+	memcpy(monster1_aabb_box_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
+	memcpy(monster1_aabb_box_element.mesh.mat.specular, spec2, 4 * sizeof(float));
+	memcpy(monster1_aabb_box_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster1_aabb_box_element.mesh.mat.shininess = shininess;
+	monster1_aabb_box_element.mesh.mat.texCount = texcount;
+	monster1_aabb_box_element.translation = { -0.75F, -0.75F, -0.85F }; //Starting position
+	monster1_aabb_box_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
+	monster1_aabb_box_element.scale = { 6.0F, 1.5F, 1.7F, 0.0F };
+	monster1_aabb_box_node = ScenegraphNode(0, &monster1_aabb_box_element, &shader, NO_TEXTURE);
+	monster1_node.addNode(&monster1_aabb_box_node);
 
 	// Upper jaw
 	monster1_part1_element.mesh = createCone(1.5f, 0.5f, 20);
@@ -1327,6 +1425,19 @@ void initCreatures() {
 	monster2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
 	monster2_node = ScenegraphNode(0, &monster2_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&monster2_node);
+
+	monster2_aabb_box_element.mesh = createCube();
+	memcpy(monster2_aabb_box_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
+	memcpy(monster2_aabb_box_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
+	memcpy(monster2_aabb_box_element.mesh.mat.specular, spec2, 4 * sizeof(float));
+	memcpy(monster2_aabb_box_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	monster2_aabb_box_element.mesh.mat.shininess = shininess;
+	monster2_aabb_box_element.mesh.mat.texCount = texcount;
+	monster2_aabb_box_element.translation = { -0.75F, -0.75F, -0.85F }; //Starting position
+	monster2_aabb_box_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
+	monster2_aabb_box_element.scale = { 6.0F, 1.5F, 1.7F, 0.0F };
+	monster2_aabb_box_node = ScenegraphNode(0, &monster2_aabb_box_element, &shader, NO_TEXTURE);
+	monster2_node.addNode(&monster2_aabb_box_node);
 
 	// Upper jaw
 	monster2_part1_element.mesh = createCone(1.5f, 0.5f, 20);
