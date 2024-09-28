@@ -29,5 +29,5 @@ void Camera::updateProjectionMatrix(float ratio) {
 	if (type == 0)
 		perspective(53.13f, ratio, 0.1f, 1000.0f);
 	else
-		ortho(-80.0F, 80.0F, -80.0F/ratio, 80.0F/ratio, 0.1F, 50.0F);
+		ortho(-80.0F*ratio, 80.0F*ratio, -80.0F, 80.0F, 0.1F, 50.0F);
 }

@@ -533,9 +533,9 @@ void refresh(int value)
 
 	haddle_monster_movement();
 
-	cameras[activeCamera].target[0] = boat_element.translation[0];
-	cameras[activeCamera].target[1] = boat_element.translation[1];
-	cameras[activeCamera].target[2] = boat_element.translation[2];
+	cameras[0].target[0] = boat_element.translation[0];
+	cameras[0].target[1] = boat_element.translation[1];
+	cameras[0].target[2] = boat_element.translation[2];
 
 	for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
 		// modify per thingy
@@ -808,7 +808,7 @@ void processMouseButtons(int button, int state, int xx, int yy)
 
 	//stop tracking the mouse
 	else if (state == GLUT_UP) {
-		if (tracking == 1) {
+		if (tracking == 1 && activeCamera == 0) {
 			cameras[activeCamera].alpha -= (xx - startX);
 			cameras[activeCamera].beta += (yy - startY);
 		}
@@ -825,6 +825,9 @@ void processMouseButtons(int button, int state, int xx, int yy)
 
 void processMouseMotion(int xx, int yy)
 {
+	if (activeCamera == 2) {
+		return;
+	}
 
 	int deltaX, deltaY;
 	float alphaAux, betaAux;
@@ -860,7 +863,7 @@ void processMouseMotion(int xx, int yy)
 		cameras[activeCamera].distance = rAux;
 		cameras[activeCamera].setOffset(alphaAux, betaAux);
 	}
-	else if (activeCamera == 1) {
+	else {
 		cameras[activeCamera].distance = rAux;
 		cameras[activeCamera].setOffset();
 	}
@@ -1550,7 +1553,7 @@ void init()
 	freeType_init(font_name);
 
 	cameras[0] = Camera(0, 10.0F, 180.0F, 20.0F);
-	cameras[1] = Camera(0, 20.0F, 0.0F, 90.0F);
+	cameras[1] = Camera(0, 160.0F, 0.0F, 90.0F);
 	cameras[2] = Camera(1, 20.0F, 0.0F, 90.0F);
 
 	initBoat();
