@@ -168,6 +168,18 @@ ScenegraphNode island1_node;
 ScenegraphNode island2_node;
 ScenegraphNode island3_node;
 ScenegraphNode island4_node;
+ScenegraphNode island1_ground_node;
+ScenegraphNode island2_ground_node;
+ScenegraphNode island3_ground_node;
+ScenegraphNode island4_ground_node;
+ScenegraphNode tree1_down_node;
+ScenegraphNode tree1_up_node;
+ScenegraphNode tree2_down_node;
+ScenegraphNode tree2_up_node;
+ScenegraphNode tree3_down_node;
+ScenegraphNode tree3_up_node;
+ScenegraphNode tree4_down_node;
+ScenegraphNode tree4_up_node;
 
 ScenegraphNode debug1_node;
 ScenegraphNode debug2_node;
@@ -215,6 +227,18 @@ SceneElement island1_element;
 SceneElement island2_element;
 SceneElement island3_element;
 SceneElement island4_element;
+SceneElement island1_ground_element;
+SceneElement island2_ground_element;
+SceneElement island3_ground_element;
+SceneElement island4_ground_element;
+SceneElement tree1_down_element;
+SceneElement tree1_up_element;
+SceneElement tree2_down_element;
+SceneElement tree2_up_element;
+SceneElement tree3_down_element;
+SceneElement tree3_up_element;
+SceneElement tree4_down_element;
+SceneElement tree4_up_element;
 
 SceneElement debug1_element;
 SceneElement debug2_element;
@@ -302,19 +326,19 @@ void handle_collisions() {
 
 	// update islands aabbs
 	points1.clear();
-	AABB::getGlobalCubePoints(island1_element.mesh.transform, points1);
+	AABB::getGlobalCubePoints(island1_ground_element.mesh.transform, points1);
 	island1_aabb.updateWithVec(points1);
 
 	points1.clear();
-	AABB::getGlobalCubePoints(island2_element.mesh.transform, points1);
+	AABB::getGlobalCubePoints(island2_ground_element.mesh.transform, points1);
 	island2_aabb.updateWithVec(points1);
 
 	points1.clear();
-	AABB::getGlobalCubePoints(island3_element.mesh.transform, points1);
+	AABB::getGlobalCubePoints(island3_ground_element.mesh.transform, points1);
 	island3_aabb.updateWithVec(points1);
 
 	points1.clear();
-	AABB::getGlobalCubePoints(island4_element.mesh.transform, points1);
+	AABB::getGlobalCubePoints(island4_ground_element.mesh.transform, points1);
 	island4_aabb.updateWithVec(points1);
 
 	// update cylinder aabbs
@@ -970,57 +994,81 @@ void initMap()
 	scenegraph.addNode(&water_node);
 	
 	// Islands ------------------------------------------
-	island1_element.mesh = createCube();
-	memcpy(island1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(island1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(island1_element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(island1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	island1_element.mesh.mat.shininess = shininess;
-	island1_element.mesh.mat.texCount = texcount;
 	island1_element.translation = { 50.0F, 0.0F, -70.0F }; //Starting position
 	island1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	island1_element.scale = { 10.0f, 0.5f, 10.0f };
-	island1_node = ScenegraphNode(0, &island1_element, &shader, NO_TEXTURE);
+	island1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	island1_node = ScenegraphNode(0, &island1_element, &shader, 0);
 	scenegraph.addNode(&island1_node);
 
-	island2_element.mesh = createCube();
-	memcpy(island2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(island2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(island2_element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(island2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	island2_element.mesh.mat.shininess = shininess;
-	island2_element.mesh.mat.texCount = texcount;
+	island1_ground_element.mesh = createCube();
+	memcpy(island1_ground_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(island1_ground_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(island1_ground_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(island1_ground_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	island1_ground_element.mesh.mat.shininess = shininess;
+	island1_ground_element.mesh.mat.texCount = texcount;
+	island1_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	island1_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	island1_ground_element.scale = { 10.0f, 0.5f, 10.0f };
+	island1_ground_node = ScenegraphNode(0, &island1_ground_element, &shader, NO_TEXTURE);
+	island1_node.addNode(&island1_ground_node);
+
 	island2_element.translation = { 30.0F, 0.0F, 0.0F }; //Starting position
 	island2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	island2_element.scale = { 10.0f, 0.5f, 10.0f };
-	island2_node = ScenegraphNode(0, &island2_element, &shader, NO_TEXTURE);
+	island2_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	island2_node = ScenegraphNode(0, &island2_element, &shader, 0);
 	scenegraph.addNode(&island2_node);
+
+	island2_ground_element.mesh = createCube();
+	memcpy(island2_ground_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(island2_ground_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(island2_ground_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(island2_ground_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	island2_ground_element.mesh.mat.shininess = shininess;
+	island2_ground_element.mesh.mat.texCount = texcount;
+	island2_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	island2_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	island2_ground_element.scale = { 10.0f, 0.5f, 10.0f };
+	island2_ground_node = ScenegraphNode(0, &island2_ground_element, &shader, NO_TEXTURE);
+	island2_node.addNode(&island2_ground_node);
 	
-	island3_element.mesh = createCube();
-	memcpy(island3_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(island3_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(island3_element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(island3_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	island3_element.mesh.mat.shininess = shininess;
-	island3_element.mesh.mat.texCount = texcount;
 	island3_element.translation = { 10.0F, 0.0F, -10.0F }; //Starting position
 	island3_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	island3_element.scale = { 10.0f, 0.5f, 10.0f };
-	island3_node = ScenegraphNode(0, &island3_element, &shader, NO_TEXTURE);
+	island3_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	island3_node = ScenegraphNode(0, &island3_element, &shader, 0);
 	scenegraph.addNode(&island3_node);
+
+	island3_ground_element.mesh = createCube();
+	memcpy(island3_ground_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(island3_ground_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(island3_ground_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(island3_ground_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	island3_ground_element.mesh.mat.shininess = shininess;
+	island3_ground_element.mesh.mat.texCount = texcount;
+	island3_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	island3_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	island3_ground_element.scale = { 10.0f, 0.5f, 10.0f };
+	island3_ground_node = ScenegraphNode(0, &island3_ground_element, &shader, NO_TEXTURE);
+	island3_node.addNode(&island3_ground_node);
 	
-	island4_element.mesh = createCube();
-	memcpy(island4_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(island4_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(island4_element.mesh.mat.specular, spec, 4 * sizeof(float));
-	memcpy(island4_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	island4_element.mesh.mat.shininess = shininess;
-	island4_element.mesh.mat.texCount = texcount;
 	island4_element.translation = { -20.0F, 0.0F, 40.0F }; //Starting position
 	island4_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	island4_element.scale = { 10.0f, 0.5f, 10.0f };
-	island4_node = ScenegraphNode(0, &island4_element, &shader, NO_TEXTURE);
+	island4_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
+	island4_node = ScenegraphNode(0, &island4_element, &shader, 0);
 	scenegraph.addNode(&island4_node);
+
+	island4_ground_element.mesh = createCube();
+	memcpy(island4_ground_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(island4_ground_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(island4_ground_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(island4_ground_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	island4_ground_element.mesh.mat.shininess = shininess;
+	island4_ground_element.mesh.mat.texCount = texcount;
+	island4_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	island4_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	island4_ground_element.scale = { 10.0f, 0.5f, 10.0f };
+	island4_ground_node = ScenegraphNode(0, &island4_ground_element, &shader, NO_TEXTURE);
+	island4_node.addNode(&island4_ground_node);
 
 	// Houses ------------------------------------------
 	house1_element.mesh = createCube();
@@ -1030,10 +1078,10 @@ void initMap()
 	memcpy(house1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	house1_element.mesh.mat.shininess = shininess;
 	house1_element.mesh.mat.texCount = texcount;
-	house1_element.translation = { 55.0F, 0.5F, -65.0F }; //Starting position
+	house1_element.translation = { 5.0F, 0.5F, 5.0F }; //Starting position
 	house1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	house1_node = ScenegraphNode(8, &house1_element, &shader, NO_TEXTURE);
-	scenegraph.addNode(&house1_node);
+	island1_node.addNode(&house1_node);
 
 	house2_element.mesh = createCube();
 	memcpy(house2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
@@ -1042,10 +1090,10 @@ void initMap()
 	memcpy(house2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	house2_element.mesh.mat.shininess = shininess;
 	house2_element.mesh.mat.texCount = texcount;
-	house2_element.translation = { 35.0F, 0.5F, 5.0F }; //Starting position
+	house2_element.translation = { 5.0F, 0.5F, 5.0F }; //Starting position
 	house2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	house2_node = ScenegraphNode(9, &house2_element, &shader, NO_TEXTURE);
-	scenegraph.addNode(&house2_node);
+	island2_node.addNode(&house2_node);
 
 	house3_element.mesh = createCube();
 	memcpy(house3_element.mesh.mat.ambient, amb, 4 * sizeof(float));
@@ -1054,10 +1102,10 @@ void initMap()
 	memcpy(house3_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	house3_element.mesh.mat.shininess = shininess;
 	house3_element.mesh.mat.texCount = texcount;
-	house3_element.translation = { 15.0F, 0.5F, -5.0F }; //Starting position
+	house3_element.translation = { 5.0F, 0.5F, 5.0F }; //Starting position
 	house3_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	house3_node = ScenegraphNode(9, &house3_element, &shader, NO_TEXTURE);
-	scenegraph.addNode(&house3_node);
+	island3_node.addNode(&house3_node);
 
 	house4_element.mesh = createCube();
 	memcpy(house4_element.mesh.mat.ambient, amb, 4 * sizeof(float));
@@ -1066,14 +1114,109 @@ void initMap()
 	memcpy(house4_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	house4_element.mesh.mat.shininess = shininess;
 	house4_element.mesh.mat.texCount = texcount;
-	house4_element.translation = { -15.0F, 0.5F, 45.0F }; //Starting position
+	house4_element.translation = { 5.0F, 0.5F, 5.0F }; //Starting position
 	house4_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	house4_node = ScenegraphNode(9, &house4_element, &shader, NO_TEXTURE);
-	scenegraph.addNode(&house4_node);
+	island4_node.addNode(&house4_node);
 
 
 	// Trees --------------------------------------------
 
+	tree1_down_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(tree1_down_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(tree1_down_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(tree1_down_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(tree1_down_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	tree1_down_element.mesh.mat.shininess = shininess;
+	tree1_down_element.mesh.mat.texCount = texcount;
+	tree1_down_element.translation = { 3.0F, 0.5F, 3.0F }; //Starting position
+	tree1_down_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	tree1_down_node = ScenegraphNode(2, &tree1_down_element, &shader, NO_TEXTURE);
+	island1_node.addNode(&tree1_down_node);
+
+	tree1_up_element.mesh = createSphere(1.0, 20);
+	memcpy(tree1_up_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(tree1_up_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(tree1_up_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(tree1_up_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	tree1_up_element.mesh.mat.shininess = shininess;
+	tree1_up_element.mesh.mat.texCount = texcount;
+	tree1_up_element.translation = { 3.0F, 2.0F, 3.0F }; //Starting position
+	tree1_up_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	tree1_up_node = ScenegraphNode(2, &tree1_up_element, &shader, NO_TEXTURE);
+	island1_node.addNode(&tree1_up_node);
+
+	tree2_down_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(tree2_down_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(tree2_down_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(tree2_down_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(tree2_down_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	tree2_down_element.mesh.mat.shininess = shininess;
+	tree2_down_element.mesh.mat.texCount = texcount;
+	tree2_down_element.translation = { 3.0F, 0.5F, 3.0F }; //Starting position
+	tree2_down_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	tree2_down_node = ScenegraphNode(2, &tree2_down_element, &shader, NO_TEXTURE);
+	island2_node.addNode(&tree2_down_node);
+
+	tree2_up_element.mesh = createSphere(1.0, 20);
+	memcpy(tree2_up_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(tree2_up_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(tree2_up_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(tree2_up_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	tree2_up_element.mesh.mat.shininess = shininess;
+	tree2_up_element.mesh.mat.texCount = texcount;
+	tree2_up_element.translation = { 3.0F, 2.0F, 3.0F }; //Starting position
+	tree2_up_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	tree2_up_node = ScenegraphNode(2, &tree2_up_element, &shader, NO_TEXTURE);
+	island2_node.addNode(&tree2_up_node);
+
+	tree3_down_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(tree3_down_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(tree3_down_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(tree3_down_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(tree3_down_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	tree3_down_element.mesh.mat.shininess = shininess;
+	tree3_down_element.mesh.mat.texCount = texcount;
+	tree3_down_element.translation = { 3.0F, 0.5F, 3.0F }; //Starting position
+	tree3_down_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	tree3_down_node = ScenegraphNode(2, &tree3_down_element, &shader, NO_TEXTURE);
+	island3_node.addNode(&tree3_down_node);
+
+	tree3_up_element.mesh = createSphere(1.0, 20);
+	memcpy(tree3_up_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(tree3_up_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(tree3_up_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(tree3_up_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	tree3_up_element.mesh.mat.shininess = shininess;
+	tree3_up_element.mesh.mat.texCount = texcount;
+	tree3_up_element.translation = { 3.0F, 2.0F, 3.0F }; //Starting position
+	tree3_up_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	tree3_up_node = ScenegraphNode(2, &tree3_up_element, &shader, NO_TEXTURE);
+	island3_node.addNode(&tree3_up_node);
+
+	tree4_down_element.mesh = createCylinder(2.0f, 0.4f, 20);
+	memcpy(tree4_down_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(tree4_down_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(tree4_down_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(tree4_down_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	tree4_down_element.mesh.mat.shininess = shininess;
+	tree4_down_element.mesh.mat.texCount = texcount;
+	tree4_down_element.translation = { 3.0F, 0.5F, 3.0F }; //Starting position
+	tree4_down_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	tree4_down_node = ScenegraphNode(2, &tree4_down_element, &shader, NO_TEXTURE);
+	island4_node.addNode(&tree4_down_node);
+
+	tree4_up_element.mesh = createSphere(1.0, 20);
+	memcpy(tree4_up_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(tree4_up_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(tree4_up_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(tree4_up_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	tree4_up_element.mesh.mat.shininess = shininess;
+	tree4_up_element.mesh.mat.texCount = texcount;
+	tree4_up_element.translation = { 3.0F, 2.0F, 3.0F }; //Starting position
+	tree4_up_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+	tree4_up_node = ScenegraphNode(2, &tree4_up_element, &shader, NO_TEXTURE);
+	island4_node.addNode(&tree4_up_node);
 
 	
 	// Obstacles ----------------------------------------
