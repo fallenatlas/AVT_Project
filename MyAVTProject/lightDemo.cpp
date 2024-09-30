@@ -108,6 +108,7 @@ float spotLightDir[NUM_SPOT_LIGHTS][4]{
 	{ 0.0F, 0.0F, 1.0F, 0.0F }
 };// need to be point in the direction of the car
 
+bool fogActive = true; 
 bool dirLightActive = true; // 0 - off, 1 - on
 bool pointLightsActive = true; // see if we can use bools or something
 bool spotLightsActive = true;
@@ -129,6 +130,7 @@ const int STONE_TEXTURE = 3;
 const int PEBBLES_AND_GRASS_TEXTURE = 4;
 
 // Scene Nodes
+ScenegraphNode ground_node;
 ScenegraphNode water_node;
 ScenegraphNode ob1_node;
 ScenegraphNode ob2_node;
@@ -188,6 +190,7 @@ ScenegraphNode debug1_node;
 ScenegraphNode debug2_node;
 
 // Scene Elements
+SceneElement ground_element;
 SceneElement water_element;
 SceneElement ob1_element;
 SceneElement ob2_element;
@@ -661,6 +664,9 @@ void renderScene(void) {
 		//multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
 		//glUniform4fv(lPos_uniformId, 1, res);
 
+		loc = glGetUniformLocation(shader.getProgramIndex(), "fogOn");
+		glUniform1i(loc, fogActive ? 1 : 0);
+
 		loc = glGetUniformLocation(shader.getProgramIndex(), "dirLightOn");
 		glUniform1i(loc, dirLightActive ? 1 : 0);
 		multMatrixPoint(VIEW, directionalLightDir, res);
@@ -714,13 +720,15 @@ void renderScene(void) {
 		glUniform1f(loc, cos(12.5f * 3.14f / 180.0f));
 
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	scenegraph.draw();
 
 	//Render text (bitmap fonts) in screen coordinates. So use ortoghonal projection with viewport coordinates.
 	glDisable(GL_DEPTH_TEST);
 	//the glyph contains transparent background colors and non-transparent for the actual character pixels. So we use the blending
-	glEnable(GL_BLEND);  
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	int m_viewport[4];
 	glGetIntegerv(GL_VIEWPORT, m_viewport);
 
@@ -773,6 +781,9 @@ void processKeys(unsigned char key, int xx, int yy)
 		case '3': 
 			activeCamera = 2; 
 			cameras[activeCamera].updateProjectionMatrix(ratio);
+			break;
+		case 'f':
+			fogActive = !fogActive;
 			break;
 		case 'n':
 			dirLightActive = !dirLightActive;
@@ -983,11 +994,24 @@ void initMap()
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	int texcount = 0;
 
-	float amb1[] = { 0.0f, 0.1f, 0.3f, 1.0f };
-	float diff1[] = { 0.1f, 0.3f, 0.8f, 0.1f };
-	float spec1[] = { 0.9f, 0.9f, 0.9f, 1.0f };
-	float shininess = 5000;
-	
+	float amb1[] = { 0.0f, 0.1f, 0.3f, 0.6f };
+	float diff1[] = { 0.1f, 0.3f, 0.8f, 0.6f };
+	float spec1[] = { 0.9f, 0.9f, 0.9f, 0.6f };
+	float shininess = 5000.0;
+
+	// ground -------------------------------------------
+	ground_element.mesh = createQuad(160.0F, 160.0F);
+	memcpy(ground_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(ground_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(ground_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ground_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	ground_element.mesh.mat.shininess = shininess;
+	ground_element.mesh.mat.texCount = texcount;
+	ground_element.translation = { 0.0F, -2.0F, 0.0F };
+	ground_element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
+	ground_node = ScenegraphNode(1, &ground_element, &shader, NO_TEXTURE);
+	scenegraph.addNode(&ground_node);
+
 	// Water -------------------------------------------
 	water_element.mesh = createQuad(160.0F, 160.0F);
 	memcpy(water_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
@@ -1457,9 +1481,9 @@ void initCreatures() {
 	float diff1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	float spec1[] = { 0.7f, 0.3f, 0.3f, 1.0f };
 
-	float amb2[] = { 1.0F, 0.0F, 0.0F, 0.0F };
-	float diff2[] = { 1.0f, 0.0f, 0.0f, 0.0f };
-	float spec2[] = { 0.7f, 0.3f, 0.3f, 0.0f };
+	float amb2[] = { 1.0F, 0.0F, 0.0F, 1.0F };
+	float diff2[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	float spec2[] = { 0.7f, 0.3f, 0.3f, 1.0f };
 
 	// Set monster movement parameters
 	monster1.speed = 5;

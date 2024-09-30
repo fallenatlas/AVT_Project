@@ -23,6 +23,7 @@ struct SpotLight {
 	float cutOff;
 };
 
+uniform int fogOn;
 uniform int dirLightOn;
 uniform DirLight dirLight;
 uniform int pointLightsOn;
@@ -78,6 +79,17 @@ void main()
 			res += calculateSpotLight(spotLights[i], n, e);
 	}
 	
+
+    // Fog calculation
+	if (fogOn == 1) {
+		vec4 fogColor = vec4(0.7, 0.7, 0.7, 1.0);
+		float distance = length(DataIn.eye);
+		float fogDensity = 0.001;
+		float fogFactor = exp(-fogDensity * distance* distance);
+		fogFactor = clamp(fogFactor, 0.0, 1.0);
+		res = mix(fogColor, res, fogFactor);
+	}
+
 	// check if the last paramater of output isn't wrong
 	colorOut = vec4(max(res.rgb, mat.ambient.rgb), mat.diffuse.a);
 }
