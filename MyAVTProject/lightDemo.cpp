@@ -1011,19 +1011,6 @@ void initMap()
 	ground_element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
 	ground_node = ScenegraphNode(1, &ground_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&ground_node);
-
-	// Water -------------------------------------------
-	water_element.mesh = createQuad(160.0F, 160.0F);
-	memcpy(water_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
-	memcpy(water_element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
-	memcpy(water_element.mesh.mat.specular, spec1, 4 * sizeof(float));
-	memcpy(water_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	water_element.mesh.mat.shininess = shininess;
-	water_element.mesh.mat.texCount = texcount;
-	water_element.translation = { 0.0F, 0.0F, 0.0F };
-	water_element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
-	water_node = ScenegraphNode(1, &water_element, &shader, NO_TEXTURE);
-	scenegraph.addNode(&water_node);
 	
 	// Islands ------------------------------------------
 	island1_element.translation = { 50.0F, 0.0F, -70.0F }; //Starting position
@@ -1353,6 +1340,19 @@ void initMap()
 	debug2_element.scale = { 0.1F, 0.1F, 0.1F };
 	debug2_node = ScenegraphNode(11, &debug2_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&debug2_node);
+
+	// Water -------------------------------------------
+	water_element.mesh = createQuad(160.0F, 160.0F);
+	memcpy(water_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(water_element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(water_element.mesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(water_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	water_element.mesh.mat.shininess = shininess;
+	water_element.mesh.mat.texCount = texcount;
+	water_element.translation = { 0.0F, 0.0F, 0.0F };
+	water_element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
+	water_node = ScenegraphNode(1, &water_element, &shader, NO_TEXTURE);
+	scenegraph.addNode(&water_node);
 }
 
 void initBoat() {
@@ -1734,17 +1734,14 @@ void init()
 	cameras[2] = Camera(1, 20.0F, 0.0F, 90.0F);
 
 	initBoat();
-	initMap();
 	initCreatures();
+	initMap(); // this needs to be last so that water is drawn last (because of transparency)
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 }
 
 // ------------------------------------------------------------
