@@ -7,6 +7,7 @@ uniform int texMode;
 uniform sampler2D texmap;
 uniform sampler2D texmap1;
 uniform sampler2D texmap2;
+uniform sampler2D texmap3;
 
 struct DirLight {
 	vec4 direction;
@@ -78,7 +79,7 @@ void main()
 	}
 	
 	// check if the last paramater of output isn't wrong
-	colorOut = max(res, mat.ambient);
+	colorOut = vec4(max(res.rgb, mat.ambient.rgb), mat.diffuse.a);
 }
 
 vec4 calculateDirLight(DirLight light, vec3 n, vec3 e)
@@ -95,25 +96,29 @@ vec4 calculateDirLight(DirLight light, vec3 n, vec3 e)
 		spec = mat.specular * pow(intSpec, mat.shininess);
 	}
 	
-	if(texMode == 0) // modulate diffuse color with texel color
+	if(texMode == 0) // modulate diffuse color
 	{
-		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
 		return intensity * mat.diffuse + spec;
 	}
-	if(texMode == 1) // modulate diffuse color with texel color
+	if(texMode == 1) // modulate diffuse color with wood texel color
 	{
 		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
 		return intensity * mat.diffuse * texel + spec;
 	}
-	else if (texMode == 2) // diffuse color is replaced by texel color, with specular area or ambient (0.1*texel)
+	else if (texMode == 2)
+	{
+		texel = texture(texmap1, DataIn.tex_coord);  // texel from grass.tga
+		return intensity * texel* mat.diffuse + spec;
+	}
+	if(texMode == 3) // modulate diffuse color with wood texel color
 	{
 		texel = texture(texmap, DataIn.tex_coord);  // texel from stone.tga
-		return intensity*texel + spec;
+		return intensity * mat.diffuse * texel + spec;
 	}
-	else // multitexturing
+	if(texMode == 4)
 	{
-		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
-		texel1 = texture(texmap1, DataIn.tex_coord);  // texel from checker.tga
+		texel = texture(texmap3, DataIn.tex_coord);  // texel from pebbles.jpg
+		texel1 = texture(texmap1, DataIn.tex_coord);  // texel from grass.tga
 		return intensity * texel * texel1 + spec;
 	}
 }  
@@ -132,25 +137,29 @@ vec4 calculatePointLight(PointLight light, vec3 n, vec3 e)
 		spec = mat.specular * pow(intSpec, mat.shininess);
 	}
 	
-	if(texMode == 0) // modulate diffuse color with texel color
+	if(texMode == 0) // modulate diffuse color
 	{
-		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
 		return intensity * mat.diffuse + spec;
 	}
-	if(texMode == 1) // modulate diffuse color with texel color
+	if(texMode == 1) // modulate diffuse color with wood texel color
 	{
 		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
 		return intensity * mat.diffuse * texel + spec;
 	}
-	else if (texMode == 2) // diffuse color is replaced by texel color, with specular area or ambient (0.1*texel)
+	else if (texMode == 2)
+	{
+		texel = texture(texmap1, DataIn.tex_coord);  // texel from grass.tga
+		return intensity * texel* mat.diffuse + spec;
+	}
+	if(texMode == 3) // modulate diffuse color with wood texel color
 	{
 		texel = texture(texmap, DataIn.tex_coord);  // texel from stone.tga
-		return intensity*texel + spec;
+		return intensity * mat.diffuse * texel * + spec;
 	}
-	else // multitexturing
+	if(texMode == 4)
 	{
-		texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
-		texel1 = texture(texmap1, DataIn.tex_coord);  // texel from checker.tga
+		texel = texture(texmap3, DataIn.tex_coord);  // texel from pebbles.jpg
+		texel1 = texture(texmap1, DataIn.tex_coord);  // texel from grass.tga
 		return intensity * texel * texel1 + spec;
 	}
 }
@@ -174,25 +183,30 @@ vec4 calculateSpotLight(SpotLight light, vec3 n, vec3 e) // should be just posit
 			float intSpec = max(dot(h,n), 0.0);
 			spec = mat.specular * pow(intSpec, mat.shininess) * att;
 		}
-		if(texMode == 0) // modulate diffuse color with texel color
+
+		if(texMode == 0) // modulate diffuse color
 		{
-			texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
 			return intensity * mat.diffuse + spec;
 		}
-		if(texMode == 1) // modulate diffuse color with texel color
+		if(texMode == 1) // modulate diffuse color with wood texel color
 		{
 			texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
 			return intensity * mat.diffuse * texel + spec;
 		}
-		else if (texMode == 2) // diffuse color is replaced by texel color, with specular area or ambient (0.1*texel)
+		else if (texMode == 2)
+		{
+			texel = texture(texmap1, DataIn.tex_coord);  // texel from grass.tga
+			return intensity * texel* mat.diffuse + spec;
+		}
+		if(texMode == 3) // modulate diffuse color with wood texel color
 		{
 			texel = texture(texmap, DataIn.tex_coord);  // texel from stone.tga
-			return intensity*texel + spec;
+			return intensity * mat.diffuse * texel + spec;
 		}
-		else // multitexturing
+		if(texMode == 4)
 		{
-			texel = texture(texmap2, DataIn.tex_coord);  // texel from lighwood.tga
-			texel1 = texture(texmap1, DataIn.tex_coord);  // texel from checker.tga
+			texel = texture(texmap3, DataIn.tex_coord);  // texel from pebbles.jpg
+			texel1 = texture(texmap1, DataIn.tex_coord);  // texel from grass.tga
 			return intensity * texel * texel1 + spec;
 		}
 	}

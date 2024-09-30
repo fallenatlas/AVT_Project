@@ -72,8 +72,8 @@ extern float mCompMatrix[COUNT_COMPUTED_MATRICES][16];
 /// The normal matrix
 extern float mNormal3x3[9];
 
-GLint tex_loc, tex_loc1, tex_loc2;
-GLuint TextureArray[3];
+GLint tex_loc, tex_loc1, tex_loc2, tex_loc3;
+GLuint TextureArray[4];
 	
 // Cameras
 int activeCamera = 0;
@@ -124,6 +124,9 @@ const float RESPAWN_TIME = 5.0F;
 // Textures
 const int NO_TEXTURE = 0;
 const int WOOD_TEXTURE = 1;
+const int GRASS_TEXTURE = 2;
+const int STONE_TEXTURE = 3;
+const int PEBBLES_AND_GRASS_TEXTURE = 4;
 
 // Scene Nodes
 ScenegraphNode water_node;
@@ -642,10 +645,14 @@ void renderScene(void) {
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, TextureArray[2]);
 
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, TextureArray[3]);
+
 	//Indicar aos tres samplers do GLSL quais os Texture Units a serem usados
 	glUniform1i(tex_loc, 0);  
 	glUniform1i(tex_loc1, 1); 
-	glUniform1i(tex_loc2, 2); 
+	glUniform1i(tex_loc2, 2);
+	glUniform1i(tex_loc3, 3);
 
 		//send the light position in eye coordinates
 		//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
@@ -943,6 +950,7 @@ GLuint setupShaders() {
 	tex_loc = glGetUniformLocation(shader.getProgramIndex(), "texmap");
 	tex_loc1 = glGetUniformLocation(shader.getProgramIndex(), "texmap1");
 	tex_loc2 = glGetUniformLocation(shader.getProgramIndex(), "texmap2");
+	tex_loc3 = glGetUniformLocation(shader.getProgramIndex(), "texmap3");
 	
 	printf("InfoLog for Per Fragment Phong Lightning Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
 
@@ -976,9 +984,9 @@ void initMap()
 	int texcount = 0;
 
 	float amb1[] = { 0.0f, 0.1f, 0.3f, 1.0f };
-	float diff1[] = { 0.1f, 0.3f, 0.8f, 1.0f };
+	float diff1[] = { 0.1f, 0.3f, 0.8f, 0.1f };
 	float spec1[] = { 0.9f, 0.9f, 0.9f, 1.0f };
-	float shininess = 500.0;
+	float shininess = 5000;
 	
 	// Water -------------------------------------------
 	water_element.mesh = createQuad(160.0F, 160.0F);
@@ -997,7 +1005,8 @@ void initMap()
 	island1_element.translation = { 50.0F, 0.0F, -70.0F }; //Starting position
 	island1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island1_element.scale = { 1.0F, 1.0F, 1.0F, 0.0F };
-	island1_node = ScenegraphNode(0, &island1_element, &shader, 0);
+	island1_ground_node = ScenegraphNode(0, &island1_ground_element, &shader, NO_TEXTURE);
+	island1_node = ScenegraphNode(0, &island1_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&island1_node);
 
 	island1_ground_element.mesh = createCube();
@@ -1010,7 +1019,7 @@ void initMap()
 	island1_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
 	island1_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island1_ground_element.scale = { 10.0f, 0.5f, 10.0f };
-	island1_ground_node = ScenegraphNode(0, &island1_ground_element, &shader, NO_TEXTURE);
+	island1_ground_node = ScenegraphNode(0, &island1_ground_element, &shader, PEBBLES_AND_GRASS_TEXTURE);
 	island1_node.addNode(&island1_ground_node);
 
 	island2_element.translation = { 30.0F, 0.0F, 0.0F }; //Starting position
@@ -1029,7 +1038,7 @@ void initMap()
 	island2_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
 	island2_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island2_ground_element.scale = { 10.0f, 0.5f, 10.0f };
-	island2_ground_node = ScenegraphNode(0, &island2_ground_element, &shader, NO_TEXTURE);
+	island2_ground_node = ScenegraphNode(0, &island2_ground_element, &shader, PEBBLES_AND_GRASS_TEXTURE);
 	island2_node.addNode(&island2_ground_node);
 	
 	island3_element.translation = { 10.0F, 0.0F, -10.0F }; //Starting position
@@ -1048,7 +1057,7 @@ void initMap()
 	island3_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
 	island3_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island3_ground_element.scale = { 10.0f, 0.5f, 10.0f };
-	island3_ground_node = ScenegraphNode(0, &island3_ground_element, &shader, NO_TEXTURE);
+	island3_ground_node = ScenegraphNode(0, &island3_ground_element, &shader, PEBBLES_AND_GRASS_TEXTURE);
 	island3_node.addNode(&island3_ground_node);
 	
 	island4_element.translation = { -20.0F, 0.0F, 40.0F }; //Starting position
@@ -1067,7 +1076,7 @@ void initMap()
 	island4_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
 	island4_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island4_ground_element.scale = { 10.0f, 0.5f, 10.0f };
-	island4_ground_node = ScenegraphNode(0, &island4_ground_element, &shader, NO_TEXTURE);
+	island4_ground_node = ScenegraphNode(0, &island4_ground_element, &shader, PEBBLES_AND_GRASS_TEXTURE);
 	island4_node.addNode(&island4_ground_node);
 
 	// Houses ------------------------------------------
@@ -1080,7 +1089,7 @@ void initMap()
 	house1_element.mesh.mat.texCount = texcount;
 	house1_element.translation = { 5.0F, 0.5F, 5.0F }; //Starting position
 	house1_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house1_node = ScenegraphNode(8, &house1_element, &shader, NO_TEXTURE);
+	house1_node = ScenegraphNode(8, &house1_element, &shader, STONE_TEXTURE);
 	island1_node.addNode(&house1_node);
 
 	house2_element.mesh = createCube();
@@ -1092,7 +1101,7 @@ void initMap()
 	house2_element.mesh.mat.texCount = texcount;
 	house2_element.translation = { 5.0F, 0.5F, 5.0F }; //Starting position
 	house2_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house2_node = ScenegraphNode(9, &house2_element, &shader, NO_TEXTURE);
+	house2_node = ScenegraphNode(9, &house2_element, &shader, STONE_TEXTURE);
 	island2_node.addNode(&house2_node);
 
 	house3_element.mesh = createCube();
@@ -1104,7 +1113,7 @@ void initMap()
 	house3_element.mesh.mat.texCount = texcount;
 	house3_element.translation = { 5.0F, 0.5F, 5.0F }; //Starting position
 	house3_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house3_node = ScenegraphNode(9, &house3_element, &shader, NO_TEXTURE);
+	house3_node = ScenegraphNode(9, &house3_element, &shader, STONE_TEXTURE);
 	island3_node.addNode(&house3_node);
 
 	house4_element.mesh = createCube();
@@ -1116,7 +1125,7 @@ void initMap()
 	house4_element.mesh.mat.texCount = texcount;
 	house4_element.translation = { 5.0F, 0.5F, 5.0F }; //Starting position
 	house4_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	house4_node = ScenegraphNode(9, &house4_element, &shader, NO_TEXTURE);
+	house4_node = ScenegraphNode(9, &house4_element, &shader, STONE_TEXTURE);
 	island4_node.addNode(&house4_node);
 
 
@@ -1131,7 +1140,7 @@ void initMap()
 	tree1_down_element.mesh.mat.texCount = texcount;
 	tree1_down_element.translation = { 3.0F, 0.5F, 3.0F }; //Starting position
 	tree1_down_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	tree1_down_node = ScenegraphNode(2, &tree1_down_element, &shader, NO_TEXTURE);
+	tree1_down_node = ScenegraphNode(2, &tree1_down_element, &shader, WOOD_TEXTURE);
 	island1_node.addNode(&tree1_down_node);
 
 	tree1_up_element.mesh = createSphere(1.0, 20);
@@ -1143,7 +1152,7 @@ void initMap()
 	tree1_up_element.mesh.mat.texCount = texcount;
 	tree1_up_element.translation = { 3.0F, 2.0F, 3.0F }; //Starting position
 	tree1_up_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	tree1_up_node = ScenegraphNode(2, &tree1_up_element, &shader, NO_TEXTURE);
+	tree1_up_node = ScenegraphNode(2, &tree1_up_element, &shader, GRASS_TEXTURE);
 	island1_node.addNode(&tree1_up_node);
 
 	tree2_down_element.mesh = createCylinder(2.0f, 0.4f, 20);
@@ -1155,7 +1164,7 @@ void initMap()
 	tree2_down_element.mesh.mat.texCount = texcount;
 	tree2_down_element.translation = { 3.0F, 0.5F, 3.0F }; //Starting position
 	tree2_down_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	tree2_down_node = ScenegraphNode(2, &tree2_down_element, &shader, NO_TEXTURE);
+	tree2_down_node = ScenegraphNode(2, &tree2_down_element, &shader, WOOD_TEXTURE);
 	island2_node.addNode(&tree2_down_node);
 
 	tree2_up_element.mesh = createSphere(1.0, 20);
@@ -1167,7 +1176,7 @@ void initMap()
 	tree2_up_element.mesh.mat.texCount = texcount;
 	tree2_up_element.translation = { 3.0F, 2.0F, 3.0F }; //Starting position
 	tree2_up_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	tree2_up_node = ScenegraphNode(2, &tree2_up_element, &shader, NO_TEXTURE);
+	tree2_up_node = ScenegraphNode(2, &tree2_up_element, &shader, GRASS_TEXTURE);
 	island2_node.addNode(&tree2_up_node);
 
 	tree3_down_element.mesh = createCylinder(2.0f, 0.4f, 20);
@@ -1179,7 +1188,7 @@ void initMap()
 	tree3_down_element.mesh.mat.texCount = texcount;
 	tree3_down_element.translation = { 3.0F, 0.5F, 3.0F }; //Starting position
 	tree3_down_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	tree3_down_node = ScenegraphNode(2, &tree3_down_element, &shader, NO_TEXTURE);
+	tree3_down_node = ScenegraphNode(2, &tree3_down_element, &shader, WOOD_TEXTURE);
 	island3_node.addNode(&tree3_down_node);
 
 	tree3_up_element.mesh = createSphere(1.0, 20);
@@ -1191,7 +1200,7 @@ void initMap()
 	tree3_up_element.mesh.mat.texCount = texcount;
 	tree3_up_element.translation = { 3.0F, 2.0F, 3.0F }; //Starting position
 	tree3_up_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	tree3_up_node = ScenegraphNode(2, &tree3_up_element, &shader, NO_TEXTURE);
+	tree3_up_node = ScenegraphNode(2, &tree3_up_element, &shader, GRASS_TEXTURE);
 	island3_node.addNode(&tree3_up_node);
 
 	tree4_down_element.mesh = createCylinder(2.0f, 0.4f, 20);
@@ -1203,7 +1212,7 @@ void initMap()
 	tree4_down_element.mesh.mat.texCount = texcount;
 	tree4_down_element.translation = { 3.0F, 0.5F, 3.0F }; //Starting position
 	tree4_down_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	tree4_down_node = ScenegraphNode(2, &tree4_down_element, &shader, NO_TEXTURE);
+	tree4_down_node = ScenegraphNode(2, &tree4_down_element, &shader, WOOD_TEXTURE);
 	island4_node.addNode(&tree4_down_node);
 
 	tree4_up_element.mesh = createSphere(1.0, 20);
@@ -1215,7 +1224,7 @@ void initMap()
 	tree4_up_element.mesh.mat.texCount = texcount;
 	tree4_up_element.translation = { 3.0F, 2.0F, 3.0F }; //Starting position
 	tree4_up_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	tree4_up_node = ScenegraphNode(2, &tree4_up_element, &shader, NO_TEXTURE);
+	tree4_up_node = ScenegraphNode(2, &tree4_up_element, &shader, GRASS_TEXTURE);
 	island4_node.addNode(&tree4_up_node);
 
 	
@@ -1687,10 +1696,11 @@ void init()
 	}
 	ilInit();
 
-	glGenTextures(3, TextureArray);
+	glGenTextures(4, TextureArray);
 	Texture2D_Loader(TextureArray, "stone.tga", 0);
-	Texture2D_Loader(TextureArray, "checker.png", 1);
+	Texture2D_Loader(TextureArray, "grass.tga", 1);
 	Texture2D_Loader(TextureArray, "lightwood.tga", 2);
+	Texture2D_Loader(TextureArray, "pebbles.jpg", 3);
 
 	/// Initialization of freetype library with font_name file
 	freeType_init(font_name);
@@ -1708,6 +1718,8 @@ void init()
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 }
 
@@ -1747,7 +1759,7 @@ int main(int argc, char **argv) {
 	glutMotionFunc(processMouseMotion);
 	glutMouseWheelFunc ( mouseWheel ) ;
 	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
-	
+
 
 //	return from main loop
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
