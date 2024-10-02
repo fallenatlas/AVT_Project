@@ -1000,7 +1000,7 @@ void initMap()
 	float shininess = 5000.0;
 
 	// ground -------------------------------------------
-	ground_element.mesh = createQuad(160.0F, 160.0F);
+	ground_element.mesh = createQuad(320.0F, 320.0F);
 	memcpy(ground_element.mesh.mat.ambient, amb, 4 * sizeof(float));
 	memcpy(ground_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
 	memcpy(ground_element.mesh.mat.specular, spec, 4 * sizeof(float));
@@ -1027,9 +1027,9 @@ void initMap()
 	memcpy(island1_ground_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	island1_ground_element.mesh.mat.shininess = shininess;
 	island1_ground_element.mesh.mat.texCount = texcount;
-	island1_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	island1_ground_element.translation = { 0.0F, -2.0F, 0.0F }; //Starting position
 	island1_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	island1_ground_element.scale = { 10.0f, 0.5f, 10.0f };
+	island1_ground_element.scale = { 10.0f, 2.5f, 10.0f };
 	island1_ground_node = ScenegraphNode(0, &island1_ground_element, &shader, PEBBLES_AND_GRASS_TEXTURE);
 	island1_node.addNode(&island1_ground_node);
 
@@ -1046,9 +1046,9 @@ void initMap()
 	memcpy(island2_ground_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	island2_ground_element.mesh.mat.shininess = shininess;
 	island2_ground_element.mesh.mat.texCount = texcount;
-	island2_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	island2_ground_element.translation = { 0.0F, -2.0F, 0.0F }; //Starting position
 	island2_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	island2_ground_element.scale = { 10.0f, 0.5f, 10.0f };
+	island2_ground_element.scale = { 10.0f, 2.5f, 10.0f };
 	island2_ground_node = ScenegraphNode(0, &island2_ground_element, &shader, PEBBLES_AND_GRASS_TEXTURE);
 	island2_node.addNode(&island2_ground_node);
 	
@@ -1065,9 +1065,9 @@ void initMap()
 	memcpy(island3_ground_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	island3_ground_element.mesh.mat.shininess = shininess;
 	island3_ground_element.mesh.mat.texCount = texcount;
-	island3_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	island3_ground_element.translation = { 0.0F, -2.0F, 0.0F }; //Starting position
 	island3_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	island3_ground_element.scale = { 10.0f, 0.5f, 10.0f };
+	island3_ground_element.scale = { 10.0f, 2.5f, 10.0f };
 	island3_ground_node = ScenegraphNode(0, &island3_ground_element, &shader, PEBBLES_AND_GRASS_TEXTURE);
 	island3_node.addNode(&island3_ground_node);
 	
@@ -1084,9 +1084,9 @@ void initMap()
 	memcpy(island4_ground_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	island4_ground_element.mesh.mat.shininess = shininess;
 	island4_ground_element.mesh.mat.texCount = texcount;
-	island4_ground_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+	island4_ground_element.translation = { 0.0F, -2.0F, 0.0F }; //Starting position
 	island4_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
-	island4_ground_element.scale = { 10.0f, 0.5f, 10.0f };
+	island4_ground_element.scale = { 10.0f, 2.5f, 10.0f };
 	island4_ground_node = ScenegraphNode(0, &island4_ground_element, &shader, PEBBLES_AND_GRASS_TEXTURE);
 	island4_node.addNode(&island4_ground_node);
 
@@ -1342,7 +1342,7 @@ void initMap()
 	scenegraph.addNode(&debug2_node);
 
 	// Water -------------------------------------------
-	water_element.mesh = createQuad(160.0F, 160.0F);
+	water_element.mesh = createQuad(320.0F, 320.0F);
 	memcpy(water_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
 	memcpy(water_element.mesh.mat.diffuse, diff1, 4 * sizeof(float));
 	memcpy(water_element.mesh.mat.specular, spec1, 4 * sizeof(float));
@@ -1481,10 +1481,6 @@ void initCreatures() {
 	float diff1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 	float spec1[] = { 0.7f, 0.3f, 0.3f, 1.0f };
 
-	float amb2[] = { 1.0F, 0.0F, 0.0F, 1.0F };
-	float diff2[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	float spec2[] = { 0.7f, 0.3f, 0.3f, 1.0f };
-
 	// Set monster movement parameters
 	monster1.speed = 5;
 	monster1.maxSpeed = 20;
@@ -1500,13 +1496,6 @@ void initCreatures() {
 	monster1_node = ScenegraphNode(0, &monster1_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&monster1_node);
 
-	monster1_aabb_box_element.mesh = createCube();
-	memcpy(monster1_aabb_box_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
-	memcpy(monster1_aabb_box_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
-	memcpy(monster1_aabb_box_element.mesh.mat.specular, spec2, 4 * sizeof(float));
-	memcpy(monster1_aabb_box_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	monster1_aabb_box_element.mesh.mat.shininess = shininess;
-	monster1_aabb_box_element.mesh.mat.texCount = texcount;
 	monster1_aabb_box_element.translation = { -0.75F, -0.75F, -0.85F }; //Starting position
 	monster1_aabb_box_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
 	monster1_aabb_box_element.scale = { 6.0F, 1.5F, 1.7F, 0.0F };
@@ -1605,13 +1594,6 @@ void initCreatures() {
 	monster2_node = ScenegraphNode(0, &monster2_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&monster2_node);
 
-	monster2_aabb_box_element.mesh = createCube();
-	memcpy(monster2_aabb_box_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
-	memcpy(monster2_aabb_box_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
-	memcpy(monster2_aabb_box_element.mesh.mat.specular, spec2, 4 * sizeof(float));
-	memcpy(monster2_aabb_box_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
-	monster2_aabb_box_element.mesh.mat.shininess = shininess;
-	monster2_aabb_box_element.mesh.mat.texCount = texcount;
 	monster2_aabb_box_element.translation = { -0.75F, -0.75F, -0.85F }; //Starting position
 	monster2_aabb_box_element.rotation = { 0.0F, 0.0F, 0.0F, 1.0F };
 	monster2_aabb_box_element.scale = { 6.0F, 1.5F, 1.7F, 0.0F };
