@@ -8,6 +8,7 @@ uniform sampler2D texmap;
 uniform sampler2D texmap1;
 uniform sampler2D texmap2;
 uniform sampler2D texmap3;
+uniform sampler2D texmap4;
 
 struct DirLight {
 	vec4 direction;
@@ -133,6 +134,11 @@ vec4 calculateDirLight(DirLight light, vec3 n, vec3 e)
 		texel1 = texture(texmap1, DataIn.tex_coord);  // texel from grass.tga
 		return intensity * texel * texel1 + spec;
 	}
+	if(texMode == 5) // modulate diffuse color with water texel color
+	{
+		texel = texture(texmap4, DataIn.tex_coord);  // texel from water.jpg
+		return intensity * mat.diffuse * texel + spec;
+	}
 }  
 
 vec4 calculatePointLight(PointLight light, vec3 n, vec3 e)
@@ -173,6 +179,11 @@ vec4 calculatePointLight(PointLight light, vec3 n, vec3 e)
 		texel = texture(texmap3, DataIn.tex_coord);  // texel from pebbles.jpg
 		texel1 = texture(texmap1, DataIn.tex_coord);  // texel from grass.tga
 		return intensity * texel * texel1 + spec;
+	}
+	if(texMode == 5) // modulate diffuse color with water texel color
+	{
+		texel = texture(texmap4, DataIn.tex_coord);  // texel from water.jpg
+		return intensity * mat.diffuse * texel + spec;
 	}
 }
 
@@ -220,6 +231,11 @@ vec4 calculateSpotLight(SpotLight light, vec3 n, vec3 e) // should be just posit
 			texel = texture(texmap3, DataIn.tex_coord);  // texel from pebbles.jpg
 			texel1 = texture(texmap1, DataIn.tex_coord);  // texel from grass.tga
 			return intensity * texel * texel1 + spec;
+		}
+		if(texMode == 5) // modulate diffuse color with water texel color
+		{
+			texel = texture(texmap4, DataIn.tex_coord);  // texel from water.jpg
+			return intensity * mat.diffuse * texel + spec;
 		}
 	}
 
