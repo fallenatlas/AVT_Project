@@ -27,6 +27,7 @@ void ScenegraphNode::draw() {
     scale(MODEL, Element->scale);
 
     if (Element->mesh.isValid) {
+        if (Element->mesh.mat.diffuse[3] == 0) glDepthMask(GL_FALSE);
         GLint loc;
         GLint pvm_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "m_pvm");
         GLint vm_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "m_viewModel");
@@ -56,6 +57,7 @@ void ScenegraphNode::draw() {
         glBindVertexArray(Element->mesh.vao);
 
         glDrawElements(Element->mesh.type, Element->mesh.numIndexes, GL_UNSIGNED_INT, 0);
+        if (Element->mesh.mat.diffuse[3] == 0) glDepthMask(GL_TRUE);
         glBindVertexArray(0);
     }
 

@@ -58,6 +58,8 @@ vec4 calculateSpotLight(SpotLight light, vec3 n, vec3 e);
 
 void main()
 {
+	if (mat.diffuse.a == 0.0) discard;
+
 	vec3 n = normalize(DataIn.normal);
 	vec3 e = normalize(DataIn.eye);
 
