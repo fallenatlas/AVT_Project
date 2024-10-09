@@ -272,6 +272,17 @@ AABB monster2_aabb;
 const std::vector<float> initialBoatPos = { 65.0F, 0.0F, -70.0F };
 const std::vector<float> initialBoatRot = { 0.0F, 0.0F, 1.0F, 0.0F };
 
+// Game variables
+float playTime = 0.0F;
+int playTimeMinutes = 0;
+int playTimeSeconds = 0;
+int level = 0;
+int livesRemaining = 1;
+bool deathOn = false;
+bool pauseOn = false;
+
+float monsterBaseSpeed = 5;
+
 void timer(int value)
 {
 	std::ostringstream oss;
@@ -294,6 +305,7 @@ void collide_and_resolve(AABB& boat_aabb, AABB& other_aabb, SceneElement& other_
 			boat.setDirection(boat_element.rotation);
 			cameras[0].boatAngle = boat_element.rotation[0];
 			cameras[0].setOffset();
+			livesRemaining -= 1;
 			return;
 		}
 
@@ -508,6 +520,7 @@ void haddle_monster_movement() {
 	// Increase monster speed with game time
 	monster_speed_timer += deltaTime;
 	if (monster_speed_timer >= 5 && monster1.speed < monster1.maxSpeed) { // every 5 sec
+		level += 1;
 		monster1.speed += 2;
 		monster2.speed += 2;
 		monster_speed_timer = 0;
@@ -558,39 +571,48 @@ void haddle_monster_movement() {
 
 void refresh(int value)
 {
-	handle_collisions();
+	if (!pauseOn && !deathOn) {
+		handle_collisions();
 
-	haddle_movement();
+		haddle_movement();
 
-	haddle_monster_movement();
+		haddle_monster_movement();
 
-	cameras[0].target[0] = boat_element.translation[0];
-	cameras[0].target[1] = boat_element.translation[1];
-	cameras[0].target[2] = boat_element.translation[2];
+		cameras[0].target[0] = boat_element.translation[0];
+		cameras[0].target[1] = boat_element.translation[1];
+		cameras[0].target[2] = boat_element.translation[2];
 
-	for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
-		// modify per thingy
-		float perpVector[3] = { boat.direction[2], 0.0F, -boat.direction[0] };
-		float modifier = -0.3f;
-		if (i == 1) {
-			modifier = 0.3f;
+		for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
+			// modify per thingy
+			float perpVector[3] = { boat.direction[2], 0.0F, -boat.direction[0] };
+			float modifier = -0.3f;
+			if (i == 1) {
+				modifier = 0.3f;
+			}
+
+			for (int j = 0; j < 3; j++) {
+				spotLightPos[i][j] = boat_element.translation[j] + boat.direction[j] * -0.0F + perpVector[j] * modifier;
+			}
+			spotLightPos[i][1] += 1.0F;
+			spotLightPos[i][3] = 1.0f;
 		}
 
-		for (int j = 0; j < 3; j++) {
-			spotLightPos[i][j] = boat_element.translation[j] + boat.direction[j] * -0.0F + perpVector[j] * modifier;
+		for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
+			for (int j = 0; j < 3; j++) {
+				spotLightDir[i][j] = boat.direction[j];
+			}
+			spotLightDir[i][1] -= 0.25f;
+			spotLightDir[i][3] = 0.0f;
 		}
-		spotLightPos[i][1] += 1.0F;
-		spotLightPos[i][3] = 1.0f;
+
+		playTime += 1.0F / 60.0F;
+		playTimeMinutes = (int)playTime / 60;
+		playTimeSeconds = (int)playTime % 60;
 	}
 
-	for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
-		for (int j = 0; j < 3; j++) {
-			spotLightDir[i][j] = boat.direction[j];
-		}
-		spotLightDir[i][1] -= 0.25f;
-		spotLightDir[i][3] = 0.0f;
+	if (livesRemaining <= 0) {
+		deathOn = true;
 	}
-	
 
 	// boat.pos += boat.speed * boat.direction * deltaTime
 	// if boat.speed > 0:
@@ -745,8 +767,17 @@ void renderScene(void) {
 	pushMatrix(VIEW);
 	loadIdentity(VIEW);
 	ortho(m_viewport[0], m_viewport[0] + m_viewport[2] - 1, m_viewport[1], m_viewport[1] + m_viewport[3] - 1, -1, 1);
-	RenderText(shaderText, "This is a sample text", 25.0f, 25.0f, 1.0f, 0.5f, 0.8f, 0.2f);
-	RenderText(shaderText, "AVT Light and Text Rendering Demo", 440.0f, 570.0f, 0.5f, 0.3, 0.7f, 0.9f);
+	if (deathOn) {
+		RenderText(shaderText, "GAME OVER", 370.0f, 384.0f, 1.0f, 0.5f, 0.8f, 0.2f);
+	}
+	else if (pauseOn) {
+		RenderText(shaderText, "PAUSE", 440.0f, 384.0f, 1.0f, 0.5f, 0.8f, 0.2f);
+	}
+	RenderText(shaderText, "Time: " + to_string(playTimeMinutes) + ":" + to_string(playTimeSeconds), 25.0f, 710.0f, 1.0f, 0.5f, 0.8f, 0.2f);
+	RenderText(shaderText, "Lives: " + to_string(livesRemaining), 25.0f, 650.0f, 1.0f, 0.5f, 0.8f, 0.2f);
+	RenderText(shaderText, "Level: " + to_string(level), 700.0f, 710.0f, 1.0f, 0.5f, 0.8f, 0.2f);
+	//RenderText(shaderText, "This is a sample text", 25.0f, 25.0f, 1.0f, 0.5f, 0.8f, 0.2f);
+	//RenderText(shaderText, "AVT Light and Text Rendering Demo", 440.0f, 570.0f, 0.5f, 0.3, 0.7f, 0.9f);
 	popMatrix(PROJECTION);
 	popMatrix(VIEW);
 	popMatrix(MODEL);
@@ -812,7 +843,26 @@ void processKeys(unsigned char key, int xx, int yy)
 			boat.acceleration = 0.6;
 			boat.rowing_speed = 15.0;
 			break;
+		case 'p':
+			if (!deathOn)
+				pauseOn = !pauseOn;
+			break;
+		case 'r':
+			deathOn = false;
+			livesRemaining = 3;
+			playTime = 0.0;
+			level = 0;
+			boat_element.translation = initialBoatPos;
+			boat_element.rotation = initialBoatRot;
+			boat.speed = 0;
+			boat.setDirection(boat_element.rotation);
+			cameras[0].boatAngle = boat_element.rotation[0];
+			cameras[0].setOffset();
 
+			monster1.speed = monsterBaseSpeed;
+			monster2.speed = monsterBaseSpeed;
+			monster_speed_timer = 0.0F;
+			break;
 	}
 }
 
@@ -1488,9 +1538,9 @@ void initCreatures() {
 	float spec1[] = { 0.7f, 0.3f, 0.3f, 1.0f };
 
 	// Set monster movement parameters
-	monster1.speed = 5;
+	monster1.speed = monsterBaseSpeed;
 	monster1.maxSpeed = 20;
-	monster2.speed = 5;
+	monster2.speed = monsterBaseSpeed;
 	monster2.maxSpeed = 20;
 	monster1.rotationDir = 1;
 	monster2.rotationDir = -1;
@@ -1788,6 +1838,7 @@ int main(int argc, char **argv) {
 
 	init();
 
+	renderScene();
 	//  GLUT main loop
 	glutMainLoop();
 
