@@ -1,5 +1,6 @@
 #include <vector>
 #include "GL/glew.h"
+#include "assimp/scene.h"
 
 #define MAX_TEXTURES 8
 
@@ -26,6 +27,13 @@ struct MyMesh {
 	};
 
 struct SceneElement {
+	int numTextures;
+	bool usingAssimp = false;
+	const aiScene* scene;
+	std::vector<struct MyMesh> meshes;
+	GLuint* textureIds;
+	bool normalMapKey = false; // by default if there is a normal map then bump effect is implemented. press key "b" to enable/disable normal mapping
+
 	struct MyMesh mesh;
 	std::vector<float> translation = { 0.0F, 0.0F, 0.0F};
 	std::vector<float> scale = { 1.0F, 1.0F, 1.0F};

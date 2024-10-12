@@ -26,6 +26,10 @@
 
 #include <IL/il.h>
 
+// Assimp include files
+#include "assimp/Importer.hpp"	//OO version Header!
+#include "assimp/scene.h"
+
 
 // Use Very Simple Libs
 #include "VSShaderlib.h"
@@ -36,6 +40,7 @@
 #include "boat.h"
 #include "aabb.h"
 #include "Texture_Loader.h"
+#include "meshFromAssimp.h"
 
 #include "avtFreeType.h"
 
@@ -72,8 +77,8 @@ extern float mCompMatrix[COUNT_COMPUTED_MATRICES][16];
 /// The normal matrix
 extern float mNormal3x3[9];
 
-GLint tex_loc, tex_loc1, tex_loc2, tex_loc3, tex_loc4;
-GLuint TextureArray[5];
+//GLint tex_loc, tex_loc1, tex_loc2, tex_loc3, tex_loc4;
+//GLuint TextureArray[5];
 	
 // Cameras
 int activeCamera = 0;
@@ -187,6 +192,9 @@ ScenegraphNode tree3_up_node;
 ScenegraphNode tree4_down_node;
 ScenegraphNode tree4_up_node;
 
+ScenegraphNode minicooper_node;
+ScenegraphNode spider_node;
+
 ScenegraphNode debug1_node;
 ScenegraphNode debug2_node;
 
@@ -250,6 +258,9 @@ SceneElement tree4_up_element;
 SceneElement debug1_element;
 SceneElement debug2_element;
 
+SceneElement minicooper_element;
+SceneElement spider_element;
+
 // AABBs
 AABB boat_aabb;
 
@@ -282,6 +293,15 @@ bool deathOn = false;
 bool pauseOn = false;
 
 float monsterBaseSpeed = 5;
+
+// Assimp stuff
+// May be changed to another location like the scene node
+// Create an instance of the Importer class
+Assimp::Importer importer;
+Assimp::Importer importer1;
+
+std::string model_dir;  //initialized by the user input at the console
+std::string filepath = "backpack/backpack.obj";
 
 void timer(int value)
 {
@@ -582,6 +602,9 @@ void refresh(int value)
 		cameras[0].target[1] = boat_element.translation[1];
 		cameras[0].target[2] = boat_element.translation[2];
 
+		minicooper_element.translation = boat_element.translation;
+		minicooper_element.translation[1] += 1.0f;
+
 		for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
 			// modify per thingy
 			float perpVector[3] = { boat.direction[2], 0.0F, -boat.direction[0] };
@@ -662,28 +685,7 @@ void renderScene(void) {
 	// use our shader
 	
 	glUseProgram(shader.getProgramIndex());
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, TextureArray[0]);  
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, TextureArray[1]);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, TextureArray[2]);
-
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, TextureArray[3]);
-
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, TextureArray[4]);
-
-	//Indicar aos tres samplers do GLSL quais os Texture Units a serem usados
-	glUniform1i(tex_loc, 0);  
-	glUniform1i(tex_loc1, 1); 
-	glUniform1i(tex_loc2, 2);
-	glUniform1i(tex_loc3, 3);
-	glUniform1i(tex_loc4, 4);
-
+	
 		//send the light position in eye coordinates
 		//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
 
@@ -996,8 +998,8 @@ GLuint setupShaders() {
 
 	// Shader for models
 	shader.init();
-	shader.loadShader(VSShaderLib::VERTEX_SHADER, "shaders/phong_lighting.vert");
-	shader.loadShader(VSShaderLib::FRAGMENT_SHADER, "shaders/phong_lighting.frag");
+	shader.loadShader(VSShaderLib::VERTEX_SHADER, "shaders/phong_lighting_new.vert");
+	shader.loadShader(VSShaderLib::FRAGMENT_SHADER, "shaders/phong_lighting_new.frag");
 	
 	// set semantics for the shader variables
 	glBindFragDataLocation(shader.getProgramIndex(), 0,"colorOut");
@@ -1012,12 +1014,6 @@ GLuint setupShaders() {
 		printf("GLSL Model Program Not Valid!\n");
 		exit(1);
 	}
-
-	tex_loc = glGetUniformLocation(shader.getProgramIndex(), "texmap");
-	tex_loc1 = glGetUniformLocation(shader.getProgramIndex(), "texmap1");
-	tex_loc2 = glGetUniformLocation(shader.getProgramIndex(), "texmap2");
-	tex_loc3 = glGetUniformLocation(shader.getProgramIndex(), "texmap3");
-	tex_loc4 = glGetUniformLocation(shader.getProgramIndex(), "texmap4");
 	
 	printf("InfoLog for Per Fragment Phong Lightning Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
 
@@ -1296,12 +1292,15 @@ void initMap()
 
 	
 	// Obstacles ----------------------------------------
+	float amb2[] = { 0.2f, 0.15f, 0.1f, 1.0f };
+	float diff2[] = { 1.0f, 0.2f, 0.1f, 1.0f };
+	float spec2[] = { 1.0f, 0.8f, 0.8f, 1.0f };
 	shininess = 100.0f;
 
 	ob1_element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(ob1_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(ob1_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(ob1_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob1_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
+	memcpy(ob1_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
+	memcpy(ob1_element.mesh.mat.specular, spec2, 4 * sizeof(float));
 	memcpy(ob1_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob1_element.mesh.mat.shininess = shininess;
 	ob1_element.mesh.mat.texCount = texcount;
@@ -1311,9 +1310,9 @@ void initMap()
 	scenegraph.addNode(&ob1_node);
 
 	ob2_element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(ob2_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(ob2_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(ob2_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob2_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
+	memcpy(ob2_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
+	memcpy(ob2_element.mesh.mat.specular, spec2, 4 * sizeof(float));
 	memcpy(ob2_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob2_element.mesh.mat.shininess = shininess;
 	ob2_element.mesh.mat.texCount = texcount;
@@ -1323,9 +1322,9 @@ void initMap()
 	scenegraph.addNode(&ob2_node);
 
 	ob3_element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(ob3_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(ob3_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(ob3_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob3_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
+	memcpy(ob3_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
+	memcpy(ob3_element.mesh.mat.specular, spec2, 4 * sizeof(float));
 	memcpy(ob3_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob3_element.mesh.mat.shininess = shininess;
 	ob3_element.mesh.mat.texCount = texcount;
@@ -1335,9 +1334,9 @@ void initMap()
 	scenegraph.addNode(&ob3_node);
 
 	ob4_element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(ob4_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(ob4_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(ob4_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob4_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
+	memcpy(ob4_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
+	memcpy(ob4_element.mesh.mat.specular, spec2, 4 * sizeof(float));
 	memcpy(ob4_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob4_element.mesh.mat.shininess = shininess;
 	ob4_element.mesh.mat.texCount = texcount;
@@ -1347,9 +1346,9 @@ void initMap()
 	scenegraph.addNode(&ob4_node);
 
 	ob5_element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(ob5_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(ob5_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(ob5_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob5_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
+	memcpy(ob5_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
+	memcpy(ob5_element.mesh.mat.specular, spec2, 4 * sizeof(float));
 	memcpy(ob5_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob5_element.mesh.mat.shininess = shininess;
 	ob5_element.mesh.mat.texCount = texcount;
@@ -1359,9 +1358,9 @@ void initMap()
 	scenegraph.addNode(&ob5_node);
 
 	ob6_element.mesh = createCylinder(2.0f, 0.4f, 20);
-	memcpy(ob6_element.mesh.mat.ambient, amb, 4 * sizeof(float));
-	memcpy(ob6_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
-	memcpy(ob6_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(ob6_element.mesh.mat.ambient, amb2, 4 * sizeof(float));
+	memcpy(ob6_element.mesh.mat.diffuse, diff2, 4 * sizeof(float));
+	memcpy(ob6_element.mesh.mat.specular, spec2, 4 * sizeof(float));
 	memcpy(ob6_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	ob6_element.mesh.mat.shininess = shininess;
 	ob6_element.mesh.mat.texCount = texcount;
@@ -1746,6 +1745,17 @@ void initCreatures() {
 	monster2.setDirection(monster2_element.rotation);
 }
 
+void load_texture(SceneElement& element, int numTextures, std::vector<std::string> filenames) {
+	element.numTextures = numTextures;
+	element.textureIds = new GLuint[numTextures];
+	glGenTextures(numTextures, element.textureIds); // Texture name generation 
+
+	// load 1 or 2 texture according to the numTextures
+	for (int i = 0; i < numTextures; i++) {
+		Texture2D_Loader(element.textureIds, filenames[i].c_str(), i);
+	}
+}
+
 void init()
 {
 	SceneElement element;
@@ -1758,13 +1768,6 @@ void init()
 	}
 	ilInit();
 
-	glGenTextures(5, TextureArray);
-	Texture2D_Loader(TextureArray, "stone.tga", 0);
-	Texture2D_Loader(TextureArray, "grass.tga", 1);
-	Texture2D_Loader(TextureArray, "lightwood.tga", 2);
-	Texture2D_Loader(TextureArray, "pebbles.jpg", 3);
-	Texture2D_Loader(TextureArray, "water.jpg", 4);
-
 	/// Initialization of freetype library with font_name file
 	freeType_init(font_name);
 
@@ -1775,6 +1778,77 @@ void init()
 	initBoat();
 	initCreatures();
 	initMap(); // this needs to be last so that water is drawn last (because of transparency)
+
+	// load textures
+	// islands ground
+	load_texture(island1_ground_element, 2, { "pebbles.jpg", "grass.tga" });
+	load_texture(island2_ground_element, 2, { "pebbles.jpg", "grass.tga" });
+	load_texture(island3_ground_element, 2, { "pebbles.jpg", "grass.tga" });
+	load_texture(island4_ground_element, 2, { "pebbles.jpg", "grass.tga" });
+
+	// houses
+	load_texture(house1_element, 1, { "stone.tga" });
+	load_texture(house2_element, 1, { "stone.tga" });
+	load_texture(house3_element, 1, { "stone.tga" });
+	load_texture(house4_element, 1, { "stone.tga" });
+
+	// trees
+	load_texture(tree1_up_element, 1, { "grass.tga" });
+	load_texture(tree2_up_element, 1, { "grass.tga" });
+	load_texture(tree3_up_element, 1, { "grass.tga" });
+	load_texture(tree4_up_element, 1, { "grass.tga" });
+
+	load_texture(tree1_down_element, 1, { "lightwood.tga" });
+	load_texture(tree2_down_element, 1, { "lightwood.tga" });
+	load_texture(tree3_down_element, 1, { "lightwood.tga" });
+	load_texture(tree4_down_element, 1, { "lightwood.tga" });
+
+	// water
+	load_texture(water_element, 1, { "water.jpg" });
+
+	//boat
+	load_texture(boat_part1_element, 1, { "lightwood.tga" });
+	load_texture(boat_part2_element, 1, { "lightwood.tga" });
+	load_texture(left_paddle_part1_element, 1, { "lightwood.tga" });
+	load_texture(left_paddle_part2_element, 1, { "lightwood.tga" });
+	load_texture(right_paddle_part1_element, 1, { "lightwood.tga" });
+	load_texture(right_paddle_part2_element, 1, { "lightwood.tga" });
+
+	float scaleFactor;
+
+	// Test assimp mesh
+	//import 3D file into Assimp scene graph
+	model_dir = "backpack/";
+	bool res = Import3DFromFile(filepath, importer, minicooper_element.scene, scaleFactor);
+
+	if (res) {
+		//creation of Mymesh array with VAO Geometry and Material and array of Texture Objs for the model input by the user
+		minicooper_element.meshes = createMeshFromAssimp(minicooper_element.scene, minicooper_element.textureIds);
+
+		minicooper_element.translation = { 30.0F, 5.0F, 10.0F }; //Starting position
+		minicooper_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+		minicooper_element.scale = { scaleFactor, scaleFactor, scaleFactor };
+		minicooper_element.usingAssimp = true;
+		minicooper_element.normalMapKey = true;
+		minicooper_node = ScenegraphNode(&minicooper_element, &shader, 0);
+		scenegraph.addNode(&minicooper_node);
+	}
+	
+	model_dir = "spider/";
+	res = Import3DFromFile("spider/spider.obj", importer1, spider_element.scene, scaleFactor);
+
+	if (res) {
+		//creation of Mymesh array with VAO Geometry and Material and array of Texture Objs for the model input by the user
+		spider_element.meshes = createMeshFromAssimp(spider_element.scene, spider_element.textureIds);
+
+		spider_element.translation = { 30.0F, 5.0F, 10.0F }; //Starting position
+		spider_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
+		spider_element.scale = { scaleFactor, scaleFactor, scaleFactor };
+		spider_element.usingAssimp = true;
+		spider_element.normalMapKey = true;
+		spider_node = ScenegraphNode(&spider_element, &shader, 0);
+		scenegraph.addNode(&spider_node);
+	}
 
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);

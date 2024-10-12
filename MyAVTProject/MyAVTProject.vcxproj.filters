@@ -48,6 +48,9 @@
     <ClCompile Include="ScenegraphNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="meshFromAssimp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AVTmathLib.h">
@@ -89,6 +92,9 @@
     <ClInclude Include="ScenegraphNode.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="meshFromAssimp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\pointlight_phong.frag">
@@ -114,6 +120,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\phong_lighting.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\phong_lighting_new.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\phong_lighting_new.vert">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

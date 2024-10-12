@@ -5,6 +5,7 @@
 #include <vector>
 #include "VSShaderlib.h"
 #include "AVTmathLib.h"
+#include "assimp/scene.h"
 
 class ScenegraphNode;
 
@@ -21,6 +22,7 @@ class ScenegraphNode {
     std::vector<ScenegraphNode*> getChildren();
 
     void draw();
+    void aiRecursive_render(const aiNode* nd, std::vector<struct MyMesh>& myMeshes, GLuint*& textureIds);
     void move(std::vector<float> translation);
     void position(std::vector<float> position);
     void spin(std::vector<float> rotation);
