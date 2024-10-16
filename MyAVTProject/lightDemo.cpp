@@ -303,6 +303,9 @@ Assimp::Importer importer1;
 std::string model_dir;  //initialized by the user input at the console
 std::string filepath = "backpack/backpack.obj";
 
+// Mirror mesh
+MyMesh mirrorMesh;
+
 void timer(int value)
 {
 	std::ostringstream oss;
@@ -660,8 +663,52 @@ void changeSize(int w, int h) {
 	// set the projection matrix
 	// glGetInteger(GL_VIEWPORT, m_view)
 	// float ratio = (m_view[2] - m_view[0))/(m_view[3] - m_view[1])
+
+	// Create the area for the rear view
+	/* create a diamond shaped stencil area */
+	loadIdentity(PROJECTION);
+	if (w <= h)
+		ortho(-2.0, 2.0, -2.0 * (GLfloat)h / (GLfloat)w,
+			2.0 * (GLfloat)h / (GLfloat)w, -10, 10);
+	else
+		ortho(-2.0 * (GLfloat)w / (GLfloat)h,
+			2.0 * (GLfloat)w / (GLfloat)h, -2.0, 2.0, -10, 10);
+
+	// load identity matrices for Model-View
+	loadIdentity(VIEW);
+	loadIdentity(MODEL);
+
+	glUseProgram(shader.getProgramIndex());
+
+	//não vai ser preciso enviar o material pois o cubo não é desenhado
+
+	rotate(MODEL, 0.0f, 0.0, 0.0, 1.0);
+	scale(MODEL, 2.0f, 0.6F, 1.0F);
+	translate(MODEL, -0.5f, 2.0f, -0.5f);
+	// send matrices to OGL
+	computeDerivedMatrix(PROJ_VIEW_MODEL);
+	//glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+	GLint pvm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_pvm");
+	GLint normal_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_normal");
+	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+	computeNormalMatrix3x3();
+	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+	glClear(GL_STENCIL_BUFFER_BIT);
+
+	glStencilFunc(GL_NEVER, 0x1, 0x1);
+	glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+
+	glBindVertexArray(mirrorMesh.vao);
+	glDrawElements(mirrorMesh.type, mirrorMesh.numIndexes, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+
+
+	// set the projection matrix
 	ratio = (1.0f * w) / h;
 	cameras[activeCamera].updateProjectionMatrix(ratio);
+
+
 }
 
 // ------------------------------------------------------------
@@ -669,12 +716,106 @@ void changeSize(int w, int h) {
 // Render stufff
 //
 
+void renderMirrorView() {
+
+	GLint loc;
+
+	// load identity matrices
+	loadIdentity(VIEW);
+	loadIdentity(MODEL);
+	// set the camera using a function similar to gluLookAt
+	vector<float> cameraPos = cameras[activeCamera].getPosition();
+	vector<float> direction = {cameraPos[0] - cameras[activeCamera].target[0], cameraPos[1] - cameras[activeCamera].target[1], cameraPos[2] - cameras[activeCamera].target[2] };
+	//lookAt(cameraPos[0], cameraPos[1], cameraPos[2], cameraPos[0] + direction[0], cameraPos[1] + direction[1], cameraPos[2] + direction[2], cameras[activeCamera].up[0], cameras[activeCamera].up[1], cameras[activeCamera].up[2]);
+
+	lookAt(boat_element.translation[0], boat_element.translation[1] + 3.0F, boat_element.translation[2], boat_element.translation[0] - boat.direction[0], boat_element.translation[1] + 2.6F, boat_element.translation[2] - boat.direction[2], cameras[activeCamera].up[0], cameras[activeCamera].up[1], cameras[activeCamera].up[2]);
+	
+	// use our shader
+	//lookAt(cameraPos[0], cameraPos[1], cameraPos[2], cameras[activeCamera].target[0], cameras[activeCamera].target[1], cameras[activeCamera].target[2], cameras[activeCamera].up[0], cameras[activeCamera].up[1], cameras[activeCamera].up[2]);
+
+
+	glUseProgram(shader.getProgramIndex());
+
+	//send the light position in eye coordinates
+	//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
+
+	float res[4];
+	//multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
+	//glUniform4fv(lPos_uniformId, 1, res);
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "fogOn");
+	glUniform1i(loc, fogActive ? 1 : 0);
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "dirLightOn");
+	glUniform1i(loc, dirLightActive ? 1 : 0);
+	multMatrixPoint(VIEW, directionalLightDir, res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "dirLight.direction");
+	glUniform4fv(loc, 1, res);
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "pointLightsOn");
+	glUniform1i(loc, pointLightsActive ? 1 : 0);
+	multMatrixPoint(VIEW, pointLightPos[0], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[0].position");
+	glUniform4fv(loc, 1, res);
+
+	multMatrixPoint(VIEW, pointLightPos[1], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[1].position");
+	glUniform4fv(loc, 1, res);
+
+	multMatrixPoint(VIEW, pointLightPos[2], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[2].position");
+	glUniform4fv(loc, 1, res);
+
+	multMatrixPoint(VIEW, pointLightPos[3], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[3].position");
+	glUniform4fv(loc, 1, res);
+
+	multMatrixPoint(VIEW, pointLightPos[4], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[4].position");
+	glUniform4fv(loc, 1, res);
+
+	multMatrixPoint(VIEW, pointLightPos[5], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "pointLights[5].position");
+	glUniform4fv(loc, 1, res);
+
+	loc = glGetUniformLocation(shader.getProgramIndex(), "spotLightsOn");
+	glUniform1i(loc, spotLightsActive ? 1 : 0);
+	multMatrixPoint(VIEW, spotLightPos[0], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[0].position");
+	glUniform4fv(loc, 1, res);
+	multMatrixPoint(VIEW, spotLightDir[0], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[0].direction");
+	glUniform4fv(loc, 1, res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[0].cutOff");
+	glUniform1f(loc, cos(12.5f * 3.14f / 180.0f));
+
+	multMatrixPoint(VIEW, spotLightPos[1], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[1].position");
+	glUniform4fv(loc, 1, res);
+	multMatrixPoint(VIEW, spotLightDir[0], res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[1].direction");
+	glUniform4fv(loc, 1, res);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[1].cutOff");
+	glUniform1f(loc, cos(12.5f * 3.14f / 180.0f));
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glStencilFunc(GL_EQUAL, 0x1, 0x1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	scenegraph.draw();
+}
+
 void renderScene(void) {
 
 	GLint loc;
 
 	FrameCount++;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	renderMirrorView();
+
 	// load identity matrices
 	loadIdentity(VIEW);
 	loadIdentity(MODEL);
@@ -748,9 +889,12 @@ void renderScene(void) {
 		loc = glGetUniformLocation(shader.getProgramIndex(), "spotLights[1].cutOff");
 		glUniform1f(loc, cos(12.5f * 3.14f / 180.0f));
 
-
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// draw scene where the stencil isn't at
+	glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	scenegraph.draw();
 
@@ -1037,6 +1181,25 @@ GLuint setupShaders() {
 //
 // Model loading and OpenGL setup
 //
+
+void initRearViewMirror() {
+	float amb1[] = { 0.3f, 0.0f, 0.0f, 1.0f };
+	float diff1[] = { 0.8f, 0.1f, 0.1f, 1.0f };
+	float spec1[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float shininess = 100.0f;
+	int texcount = 0;
+
+	// create geometry and VAO of the cube
+	mirrorMesh = createCube();
+	memcpy(mirrorMesh.mat.ambient, amb1, 4 * sizeof(float));
+	memcpy(mirrorMesh.mat.diffuse, diff1, 4 * sizeof(float));
+	memcpy(mirrorMesh.mat.specular, spec1, 4 * sizeof(float));
+	memcpy(mirrorMesh.mat.emissive, emissive, 4 * sizeof(float));
+	mirrorMesh.mat.shininess = shininess;
+	mirrorMesh.mat.texCount = texcount;
+}
 
 void initMap()
 {
@@ -1775,6 +1938,7 @@ void init()
 	cameras[1] = Camera(0, 160.0F, 0.0F, 90.0F);
 	cameras[2] = Camera(1, 20.0F, 0.0F, 90.0F);
 
+	initRearViewMirror();
 	initBoat();
 	initCreatures();
 	initMap(); // this needs to be last so that water is drawn last (because of transparency)
@@ -1855,6 +2019,8 @@ void init()
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearStencil(0x0);
+	glEnable(GL_STENCIL_TEST);
 }
 
 // ------------------------------------------------------------
@@ -1867,7 +2033,7 @@ int main(int argc, char **argv) {
 
 //  GLUT initialization
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DEPTH|GLUT_DOUBLE|GLUT_RGBA|GLUT_MULTISAMPLE);
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_STENCIL | GLUT_MULTISAMPLE);
 
 	glutInitContextVersion (4, 3);
 	glutInitContextProfile (GLUT_CORE_PROFILE );

@@ -15,7 +15,6 @@ void Scenegraph::addNode(ScenegraphNode* node) {
 }
 
 void Scenegraph::draw() {
-  glStencilMask(0xFF);  // Enable writing to the stencil buffer
  
   for (unsigned int i = 0; i < Nodes.size(); i++) {
       if (Nodes[i]->isActive) {
@@ -24,7 +23,6 @@ void Scenegraph::draw() {
       }
   }
   
-  glStencilMask(0x00);
 }
 
 ScenegraphNode* Scenegraph::getNode(int id) {
