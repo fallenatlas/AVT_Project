@@ -134,6 +134,7 @@ const int GRASS_TEXTURE = 2;
 const int STONE_TEXTURE = 3;
 const int PEBBLES_AND_GRASS_TEXTURE = 4;
 const int WATER_TEXTURE = 5;
+const int LIGHTHOUSE_BILLBOARD_TEXTURE = 6;
 
 // Scene Nodes
 ScenegraphNode ground_node;
@@ -191,6 +192,7 @@ ScenegraphNode tree3_down_node;
 ScenegraphNode tree3_up_node;
 ScenegraphNode tree4_down_node;
 ScenegraphNode tree4_up_node;
+ScenegraphNode lighthouse_node;
 
 ScenegraphNode minicooper_node;
 ScenegraphNode spider_node;
@@ -254,6 +256,8 @@ SceneElement tree3_down_element;
 SceneElement tree3_up_element;
 SceneElement tree4_down_element;
 SceneElement tree4_up_element;
+
+SceneElement lighthouse_element;
 
 SceneElement debug1_element;
 SceneElement debug2_element;
@@ -807,6 +811,38 @@ void renderMirrorView() {
 	scenegraph.draw();
 }
 
+void rotateBillboard(float* cam, float* worldPos) {
+
+	float lookAt[3] = { 0,0,1 }, objToCamProj[3], upAux[3], angleCosine;
+
+	// objToCamProj is the vector in world coordinates from the local origin to the camera
+	// projected in the XZ plane
+	objToCamProj[0] = cam[0] - worldPos[0];
+	objToCamProj[1] = 0;
+	objToCamProj[2] = cam[2] - worldPos[2];
+
+
+	// normalize both vectors to get the cosine directly afterwards
+	normalize(objToCamProj);
+
+	// easy fix to determine wether the angle is negative or positive
+	// for positive angles upAux will be a vector pointing in the 
+	// positive y direction, otherwise upAux will point downwards
+	// effectively reversing the rotation.
+
+	crossProduct(lookAt, objToCamProj, upAux);
+
+	// compute the angle
+	angleCosine = dotProduct(lookAt, objToCamProj);
+
+	// perform the rotation. The if statement is used for stability reasons
+	// if the lookAt and v vectors are too close together then |aux| could
+	// be bigger than 1 due to lack of precision
+	if ((angleCosine < 0.99990) && (angleCosine > -0.9999)) {
+		lighthouse_element.rotation = { (float)(acos(angleCosine) * 180 / 3.14), upAux[0], upAux[1], upAux[2] };
+	}
+}
+
 void renderScene(void) {
 
 	GLint loc;
@@ -896,6 +932,8 @@ void renderScene(void) {
 	glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
+	rotateBillboard(&cameras[activeCamera].getPosition()[0], &lighthouse_element.translation[0]);
+
 	scenegraph.draw();
 
 	//Render text (bitmap fonts) in screen coordinates. So use ortoghonal projection with viewport coordinates.
@@ -945,13 +983,6 @@ void processKeys(unsigned char key, int xx, int yy)
 		case 27:
 			glutLeaveMainLoop();
 			break;
-		/*
-		case 'c': 
-			printf("Camera Spherical Coordinates (%f, %f, %f)\n", cameras[activeCamera].alpha, cameras[activeCamera].beta, cameras[activeCamera].distance);
-			break;
-		case 'm': glEnable(GL_MULTISAMPLE); break;
-		case 'n': glDisable(GL_MULTISAMPLE); break;
-		*/
 		case '1': 
 			activeCamera = 0;
 			cameras[activeCamera].updateProjectionMatrix(ratio);
@@ -1559,6 +1590,19 @@ void initMap()
 	debug2_node = ScenegraphNode(&debug2_element, &shader, NO_TEXTURE);
 	scenegraph.addNode(&debug2_node);
 
+	// LightHouse (billboard) -------------------------------------------
+	lighthouse_element.mesh = createQuad(40.0F, 40.0F);
+	memcpy(lighthouse_element.mesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(lighthouse_element.mesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(lighthouse_element.mesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(lighthouse_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
+	lighthouse_element.mesh.mat.shininess = shininess;
+	lighthouse_element.mesh.mat.texCount = texcount;
+	lighthouse_element.translation = { 75.0F, 13.0F, 160.0F };
+	lighthouse_element.rotation = { 180.0F, 0.0F, 1.0F, 0.0F };
+	lighthouse_node = ScenegraphNode(&lighthouse_element, &shader, LIGHTHOUSE_BILLBOARD_TEXTURE);
+	scenegraph.addNode(&lighthouse_node);
+
 	// Water -------------------------------------------
 	water_element.mesh = createQuad(320.0F, 320.0F);
 	memcpy(water_element.mesh.mat.ambient, amb1, 4 * sizeof(float));
@@ -1969,6 +2013,9 @@ void init()
 
 	// water
 	load_texture(water_element, 1, { "water.jpg" });
+
+	// lighthouse
+	load_texture(lighthouse_element, 1, { "lighthouse.png" });
 
 	//boat
 	load_texture(boat_part1_element, 1, { "lightwood.tga" });

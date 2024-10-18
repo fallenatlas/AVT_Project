@@ -44,7 +44,6 @@ void ScenegraphNode::aiRecursive_render(const aiNode* nd, std::vector<struct MyM
 	memcpy(aux, &m, sizeof(float) * 16);
 	multMatrix(MODEL, aux);
 
-
 	// draw all meshes assigned to this node
 	for (unsigned int n = 0; n < nd->mNumMeshes; ++n) {
 
@@ -239,6 +238,7 @@ void ScenegraphNode::setRotation(std::vector<float> rotation) {
     Element->rotation[0] = rotation[0];
     Element->rotation[1] = rotation[1];
     Element->rotation[2] = rotation[2];
+	Element->rotation[2] = rotation[3];
 }
 
 void ScenegraphNode::spin(std::vector<float> rotation) {

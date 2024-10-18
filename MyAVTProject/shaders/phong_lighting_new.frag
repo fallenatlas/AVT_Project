@@ -109,7 +109,7 @@ void main()
 
 	// check if the last paramater of output isn't wrong
 	//colorOut = vec4(max(res.rgb, mat.ambient.rgb), mat.diffuse.a);
-	colorOut = vec4(res, mat.diffuse.a);
+	colorOut = vec4(res, mat.diffuse.a * diff.a);
 }
 
 void calculateDirLight(vec3 lightDir, vec3 n, vec3 e)
