@@ -238,7 +238,7 @@ void ScenegraphNode::setRotation(std::vector<float> rotation) {
     Element->rotation[0] = rotation[0];
     Element->rotation[1] = rotation[1];
     Element->rotation[2] = rotation[2];
-	Element->rotation[2] = rotation[3];
+	Element->rotation[3] = rotation[3];
 }
 
 void ScenegraphNode::spin(std::vector<float> rotation) {
