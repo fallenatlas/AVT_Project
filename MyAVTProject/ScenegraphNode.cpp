@@ -134,8 +134,7 @@ void ScenegraphNode::aiRecursive_render(const aiNode* nd, std::vector<struct MyM
 }
 
 
-void ScenegraphNode::draw() {
-
+void ScenegraphNode::draw(bool shadowMode, bool reflectionMode) {
     pushMatrix(MODEL);
     translate(MODEL, Element->translation);
     rotate(MODEL, Element->rotation);
@@ -215,7 +214,7 @@ void ScenegraphNode::draw() {
 	}
 
     for(ScenegraphNode* node : Children) {
-        node->draw();
+        node->draw(shadowMode, reflectionMode);
     }
 
     memcpy(Element->mesh.transform, mMatrix[MODEL], 16 * sizeof(float));

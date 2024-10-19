@@ -16,7 +16,7 @@ class Scenegraph {
     ~Scenegraph();
 
     void addNode(ScenegraphNode* node);
-    void draw();
+    void draw(bool shadowMode, bool reflectionMode);
 
     ScenegraphNode* getNode(int id);
 
