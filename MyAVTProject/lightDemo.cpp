@@ -1360,9 +1360,9 @@ void initMap()
 	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	int texcount = 0;
 
-	float amb1[] = { 0.0f, 0.1f, 0.3f, 0.6f };
-	float diff1[] = { 0.1f, 0.3f, 0.8f, 0.6f };
-	float spec1[] = { 0.9f, 0.9f, 0.9f, 0.6f };
+	float amb1[] = { 0.0f, 0.1f, 0.3f, 0.8f };
+	float diff1[] = { 0.1f, 0.3f, 0.8f, 0.8f };
+	float spec1[] = { 0.9f, 0.9f, 0.9f, 0.8f };
 	float shininess = 5000.0;
 
 	// ground -------------------------------------------
