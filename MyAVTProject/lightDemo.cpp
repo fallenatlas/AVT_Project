@@ -49,6 +49,11 @@ using namespace std;
 #define CAPTION "AVT Demo: Phong Shading and Text rendered with FreeType"
 #define NUM_POINT_LIGHTS 6
 #define NUM_SPOT_LIGHTS 2
+
+#define frand()			((float)rand()/RAND_MAX)
+#define M_PI			3.14159265
+#define MAX_PARTICULAS  20
+
 int WindowHandle = 0;
 int WinX = 1024, WinY = 768;
 
@@ -260,6 +265,7 @@ SceneElement debug2_element;
 
 SceneElement minicooper_element;
 SceneElement spider_element;
+SceneElement particle_element;
 
 // AABBs
 AABB boat_aabb;
@@ -282,6 +288,18 @@ AABB monster2_aabb;
 
 const std::vector<float> initialBoatPos = { 65.0F, 0.0F, -70.0F };
 const std::vector<float> initialBoatRot = { 0.0F, 0.0F, 1.0F, 0.0F };
+
+typedef struct {
+	float	life;		// vida
+	float	fade;		// fade
+	float	r, g, b;    // color
+	GLfloat x, y, z;    // posi‹o
+	GLfloat vx, vy, vz; // velocidade 
+	GLfloat ax, ay, az; // acelera‹o
+} Particle;
+
+Particle particula[MAX_PARTICULAS];
+int dead_num_particles = MAX_PARTICULAS;
 
 // Game variables
 float playTime = 0.0F;
@@ -447,6 +465,130 @@ bool paddle_is_in_the_water(SceneElement paddle) {
 		paddle.rotation[0] < 0 && ((int)paddle.rotation[0] % 360 > -50 || (int)paddle.rotation[0] % 360 < -305);
 }
 
+void initParticles(void)
+{
+	GLfloat v, theta, phi;
+	int i;
+
+	dead_num_particles = 0;
+
+	for (i = 0; i < MAX_PARTICULAS; i++)
+	{
+		v = 0.8 * frand() + 0.2;
+		phi = frand() * M_PI;
+		theta = 2.0 * frand() * M_PI;
+
+		particula[i].x = boat_element.translation[0];
+		particula[i].y = boat_element.translation[1];
+		particula[i].z = boat_element.translation[2];
+		particula[i].vx = v * cos(theta) * sin(phi);
+		particula[i].vy = v * cos(phi);
+		particula[i].vz = v * sin(theta) * sin(phi);
+		particula[i].ax = 0.1f; /* simular um pouco de vento */
+		particula[i].ay = 0.15f; /* simular a aceleração da gravidade */
+		particula[i].az = 0.0f;
+
+		/* tom amarelado que vai ser multiplicado pela textura que varia entre branco e preto */
+		particula[i].r = 0.0f;
+		particula[i].g = 0.0f;
+		particula[i].b = 1.0f;
+
+		particula[i].life = 0.1f;		/* vida inicial */
+		particula[i].fade = 0.0025f;	    /* step de decréscimo da vida para cada iteração */
+	}
+}
+
+void updateParticles()
+{
+	int i;
+	float h;
+
+	/* Método de Euler de integração de eq. diferenciais ordinárias
+	h representa o step de tempo; dv/dt = a; dx/dt = v; e conhecem-se os valores iniciais de x e v */
+
+	//h = 0.125f;
+	h = 0.033;
+	for (i = 0; i < MAX_PARTICULAS; i++)
+	{
+		particula[i].x += (h * particula[i].vx);
+		particula[i].y += (h * particula[i].vy);
+		particula[i].z += (h * particula[i].vz);
+		particula[i].vx += (h * particula[i].ax);
+		particula[i].vy += (h * particula[i].ay);
+		particula[i].vz += (h * particula[i].az);
+		particula[i].life -= particula[i].fade;
+	}
+}
+
+void drawParticles() {
+	if (dead_num_particles == MAX_PARTICULAS)
+		initParticles();
+	else
+		updateParticles();
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glDepthMask(GL_FALSE);  //Depth Buffer Read Only
+	glDisable(GL_CULL_FACE);
+
+	float pos[3], right[3], up[3];
+	float particle_color[4];
+
+	GLint loc;
+	GLint pvm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_pvm");
+	GLint vm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_viewModel");
+	GLint normal_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_normal");
+	GLint lPos_uniformId = glGetUniformLocation(shader.getProgramIndex(), "l_pos");
+	//GLint texMode_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "texMode"); // different modes of texturing
+	GLint normalMap_loc = glGetUniformLocation(shader.getProgramIndex(), "normalMap");
+	GLint specularMap_loc = glGetUniformLocation(shader.getProgramIndex(), "specularMap");
+	GLint diffMapCount_loc = glGetUniformLocation(shader.getProgramIndex(), "diffMapCount");
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, particle_element.textureIds[0]);
+
+	for (int i = 0; i < MAX_PARTICULAS; i++)
+	{
+		if (particula[i].life > 0.0f) /* só desenha as que ainda estão vivas */
+		{
+			/* A vida da partícula representa o canal alpha da cor. Como o blend está activo a cor final é a soma da cor rgb do fragmento multiplicada pelo
+			alpha com a cor do pixel destino */
+
+			particle_color[0] = particula[i].r;
+			particle_color[1] = particula[i].g;
+			particle_color[2] = particula[i].b;
+			particle_color[3] = particula[i].life;
+
+			// send the material - diffuse color modulated with texture
+			loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+			glUniform4fv(loc, 1, particle_color);
+			loc = glGetUniformLocation(shader.getProgramIndex(), "texUnitDiff");
+			glUniform1i(loc, 0);
+			glUniform1ui(diffMapCount_loc, 1);
+
+			pushMatrix(MODEL);
+			translate(MODEL, particula[i].x, particula[i].y, particula[i].z);
+
+			// send matrices to OGL
+			computeDerivedMatrix(PROJ_VIEW_MODEL);
+			glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+			computeNormalMatrix3x3();
+			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+			glBindVertexArray(particle_element.mesh.vao);
+			glDrawElements(particle_element.mesh.type, particle_element.mesh.numIndexes, GL_UNSIGNED_INT, 0);
+			popMatrix(MODEL);
+		}
+		else dead_num_particles++;
+	}
+
+	glDepthMask(GL_TRUE); //make depth buffer again writeable
+	glEnable(GL_CULL_FACE);
+}
+bool boatMoving = false;
+
 void haddle_movement() {
 	int rotation_dir = 1;
 	if (key_s_is_pressed)
@@ -463,8 +605,12 @@ void haddle_movement() {
 	//myElements[boat.elementNum].translation += boat.direction * boat.speed * deltaTime;
 	if (boat.speed != 0.0F) {
 		boat.speed *= boat.speedDecay;
-		//boat.speed = std::max(boat.speed - boat.speedDecay, 0.0F); // experiment boat.speed *= decay
+		if (boat.speed <= 0.2)
+			boat.speed = 0;
+		boatMoving = true;
 	}
+	else
+		boatMoving = false;
 
 	std::vector<float> rotation = { rotation_dir * boat.rowing_speed, 0, 0, 0 };
 
@@ -813,6 +959,7 @@ void renderScene(void) {
 
 	FrameCount++;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
 
 	renderMirrorView();
 
@@ -898,8 +1045,10 @@ void renderScene(void) {
 
 	scenegraph.draw();
 
+	if (boatMoving)
+		drawParticles();
+
 	//Render text (bitmap fonts) in screen coordinates. So use ortoghonal projection with viewport coordinates.
-	glDisable(GL_DEPTH_TEST);
 	//the glyph contains transparent background colors and non-transparent for the actual character pixels. So we use the blending
 
 	int m_viewport[4];
@@ -927,7 +1076,7 @@ void renderScene(void) {
 	popMatrix(PROJECTION);
 	popMatrix(VIEW);
 	popMatrix(MODEL);
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 
 	glutSwapBuffers();
@@ -1571,6 +1720,10 @@ void initMap()
 	water_element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
 	water_node = ScenegraphNode(&water_element, &shader, WATER_TEXTURE);
 	scenegraph.addNode(&water_node);
+
+	// Water particles
+	particle_element.mesh = createQuad(2, 2);
+	particle_element.mesh.mat.texCount = texcount;
 }
 
 void initBoat() {
@@ -1969,6 +2122,7 @@ void init()
 
 	// water
 	load_texture(water_element, 1, { "water.jpg" });
+	load_texture(particle_element, 1, { "particle.tga" });
 
 	//boat
 	load_texture(boat_part1_element, 1, { "lightwood.tga" });
