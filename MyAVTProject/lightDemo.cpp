@@ -727,7 +727,7 @@ void haddle_movement() {
 	//myElements[boat.elementNum].translation += boat.direction * boat.speed * deltaTime;
 	if (boat.speed != 0.0F) {
 		boat.speed *= boat.speedDecay;
-		if (boat.speed <= 0.2)
+		if (abs(boat.speed) <= 0.2)
 			boat.speed = 0;
 	}
 
@@ -1122,7 +1122,7 @@ void drawMirror() {
 	glBindVertexArray(0);
 
 	ratio = (1.0f * currW) / currH;
-	cameras[activeCamera].updateProjectionMatrix(ratio);
+	cameras[0].updateProjectionMatrix(ratio);
 }
 
 void renderMirrorView() {
@@ -1160,6 +1160,8 @@ void renderMirrorView() {
 	ground_node.draw(false, false);
 	scenegraph.draw(false, false);
 	water_node.draw(false, false);
+
+	cameras[activeCamera].updateProjectionMatrix(ratio);
 }
 
 void renderScene(void) {
