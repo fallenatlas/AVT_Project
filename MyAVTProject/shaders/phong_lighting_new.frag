@@ -44,6 +44,7 @@ uniform bool normalMap;  //for normal mapping
 uniform bool specularMap;
 uniform uint diffMapCount;
 
+uniform bool shadowMode;
 
 vec4 diff, auxSpec;
 vec4 diffSum, specSum;
@@ -56,60 +57,78 @@ void main()
 {
 	if (mat.diffuse.a == 0.0) discard;
 
-	vec3 n;
-	if(normalMap)
-		n = normalize(2.0 * texture(texUnitNormalMap, DataIn.tex_coord).rgb - 1.0);  //normal in tangent space
-	else
-		n = normalize(DataIn.normal);
-
-	vec3 e = normalize(DataIn.eye);
-
-	vec3 res = vec3(0.0);
-
-	// determine diff color and spec color
-	if(diffMapCount == 0)
-		diff = mat.diffuse;
-	else if(diffMapCount == 1)
-		diff = mat.diffuse * texture(texUnitDiff, DataIn.tex_coord);
-	else
-		diff = mat.diffuse * texture(texUnitDiff, DataIn.tex_coord) * texture(texUnitDiff1, DataIn.tex_coord);
-
-	if(specularMap) 
-		auxSpec = mat.specular * texture(texUnitSpec, DataIn.tex_coord);
-	else
-		auxSpec = mat.specular;
-
-	// add the directional light's contribution to the output
-	if (dirLightOn == 1) {
-		calculateDirLight(DataIn.directionalLightDir, n, e);
+	if(shadowMode) {  //constant color
+		vec3 res = vec3(0.5, 0.5, 0.5);
+		// Fog calculation
+		if (fogOn == 1) {
+			vec3 fogColor = vec3(0.7, 0.7, 0.7);
+			float distance = length(DataIn.viewEye);
+			float fogDensity = 0.001;
+			float fogFactor = exp(-fogDensity * distance* distance);
+			fogFactor = clamp(fogFactor, 0.0, 1.0);
+			res = mix(fogColor, res, fogFactor);
+		}
+		colorOut = vec4(res, mat.diffuse.a);
 	}
+	else {
+		vec3 n;
+		if(normalMap)
+			n = normalize(2.0 * texture(texUnitNormalMap, DataIn.tex_coord).rgb - 1.0);  //normal in tangent space
+		else
+			n = normalize(DataIn.normal);
+
+		vec3 e = normalize(DataIn.eye);
+
+		vec3 res = vec3(0.0);
+
+		// determine diff color and spec color
+		if(diffMapCount == 0)
+			diff = mat.diffuse;
+		else if(diffMapCount == 1)
+			diff = mat.diffuse * texture(texUnitDiff, DataIn.tex_coord);
+		else
+			diff = mat.diffuse * texture(texUnitDiff, DataIn.tex_coord) * texture(texUnitDiff1, DataIn.tex_coord);
+
+		if(specularMap) 
+			auxSpec = mat.specular * texture(texUnitSpec, DataIn.tex_coord);
+		else
+			auxSpec = mat.specular;
+
+		// add the directional light's contribution to the output
+		if (dirLightOn == 1) {
+			calculateDirLight(DataIn.directionalLightDir, n, e);
+		}
 		
-	// do the same for all point lights
-	if (pointLightsOn == 1) {
-		for(int i = 0; i < NUM_POINT_LIGHTS; i++)
-			calculatePointLight(DataIn.pointLightsDir[i], n, e);
-	}
+		// do the same for all point lights
+		if (pointLightsOn == 1) {
+			for(int i = 0; i < NUM_POINT_LIGHTS; i++)
+				calculatePointLight(DataIn.pointLightsDir[i], n, e);
+		}
 		
-	// and add others lights as well (like spotlights)
-	if (spotLightsOn == 1) {
-		for(int i = 0; i < NUM_SPOT_LIGHTS; i++)
-			calculateSpotLight(DataIn.spotLightsDir[i], DataIn.spotLigthsPointingDirection[i], DataIn.spotLightsCutOff[i], n, e);
-	}
+		// and add others lights as well (like spotlights)
+		if (spotLightsOn == 1) {
+			for(int i = 0; i < NUM_SPOT_LIGHTS; i++)
+				calculateSpotLight(DataIn.spotLightsDir[i], DataIn.spotLigthsPointingDirection[i], DataIn.spotLightsCutOff[i], n, e);
+		}
 	
-	res = max(diffSum.rgb, diff.rgb*0.15) + specSum.rgb;
-    // Fog calculation
-	if (fogOn == 1) {
-		vec3 fogColor = vec3(0.7, 0.7, 0.7);
-		float distance = length(DataIn.viewEye);
-		float fogDensity = 0.001;
-		float fogFactor = exp(-fogDensity * distance* distance);
-		fogFactor = clamp(fogFactor, 0.0, 1.0);
-		res = mix(fogColor, res, fogFactor);
-	}
+		res = max(diffSum.rgb, diff.rgb*0.15) + specSum.rgb;
+		// Fog calculation
+		if (fogOn == 1) {
+			vec3 fogColor = vec3(0.7, 0.7, 0.7);
+			float distance = length(DataIn.viewEye);
+			float fogDensity = 0.001;
+			float fogFactor = exp(-fogDensity * distance* distance);
+			fogFactor = clamp(fogFactor, 0.0, 1.0);
+			res = mix(fogColor, res, fogFactor);
+		}
 
-	// check if the last paramater of output isn't wrong
-	//colorOut = vec4(max(res.rgb, mat.ambient.rgb), mat.diffuse.a);
-	colorOut = vec4(res, mat.diffuse.a);
+		// check if the last paramater of output isn't wrong
+		//colorOut = vec4(max(res.rgb, mat.ambient.rgb), mat.diffuse.a);
+		colorOut = vec4(res, diff.a);
+		// check if the last paramater of output isn't wrong
+		//colorOut = vec4(max(res.rgb, mat.ambient.rgb), mat.diffuse.a);
+		//colorOut = vec4(res, mat.diffuse.a); // previous one
+	}
 }
 
 void calculateDirLight(vec3 lightDir, vec3 n, vec3 e)

@@ -21,7 +21,7 @@ class ScenegraphNode {
     ~ScenegraphNode();
     std::vector<ScenegraphNode*> getChildren();
 
-    void draw();
+    void draw(bool shadowMode, bool reflectionMode);
     void aiRecursive_render(const aiNode* nd, std::vector<struct MyMesh>& myMeshes, GLuint*& textureIds);
     void move(std::vector<float> translation);
     void position(std::vector<float> position);
