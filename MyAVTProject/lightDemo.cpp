@@ -102,8 +102,8 @@ char s[32];
 
 // Lights
 //float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};
-float directionalLightPos[4]{ 10.0f, 30.0f, 10.0f, 0.0f };
-float directionalLightDir[4]{ 1.0f, 1000.0f, 1.0f, 0.0f };
+float directionalLightPos[4]{ -10.0f, 30.0f, 10.0f, 0.0f };
+float directionalLightDir[4]{ -1000.0f, 3000.0f, 1000.0f, 0.0f };
 float pointLightPos[NUM_POINT_LIGHTS][4]{
 	{ 40.0F, 1.5F, -35.0F, 1.0F },
 	{ 50.0F, 1.5F, -30.0F, 1.0F },
@@ -125,6 +125,7 @@ bool fogActive = true;
 bool dirLightActive = true; // 0 - off, 1 - on
 bool pointLightsActive = true; // see if we can use bools or something
 bool spotLightsActive = true;
+bool shadowsActive = true;
 
 // Toggles
 bool key_a_is_pressed = false;
@@ -1360,16 +1361,18 @@ void renderScene(void) {
 	glUniform1i(shadowMode_uniformId, 0);  //Render with constant color
 	ground_node.draw(false, false);
 
-	glUniform1i(shadowMode_uniformId, 1);  //Render with constant color
-	glDisable(GL_DEPTH_TEST); //To force the shadow geometry to be rendered even if behind the floor
+	if (shadowsActive) {
+		glUniform1i(shadowMode_uniformId, 1);  //Render with constant color
+		glDisable(GL_DEPTH_TEST); //To force the shadow geometry to be rendered even if behind the floor
 
-	//Dark the color stored in color buffer
-	glBlendFunc(GL_DST_COLOR, GL_ZERO); //do we want this or not???
-	//glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+		//Dark the color stored in color buffer
+		glBlendFunc(GL_DST_COLOR, GL_ZERO); //do we want this or not???
+		//glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
 
-	scenegraph.draw(true, false);
+		scenegraph.draw(true, false);
 
-	glEnable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
+	}
 	// end shadows
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1522,6 +1525,9 @@ void processKeys(unsigned char key, int xx, int yy)
 		monster1.speed = monsterBaseSpeed;
 		monster2.speed = monsterBaseSpeed;
 		monster_speed_timer = 0.0F;
+		break;
+	case 'l':
+		shadowsActive = !shadowsActive;
 		break;
 	}
 }
