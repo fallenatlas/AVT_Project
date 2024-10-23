@@ -17,6 +17,8 @@
 #include <string>
 #include <cstdlib>
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 
 // include GLEW to access OpenGL 3.3 functions
 #include <GL/glew.h>
@@ -102,7 +104,7 @@ char s[32];
 
 // Lights
 //float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};
-float directionalLightPos[4]{ -10.0f, 30.0f, 10.0f, 0.0f };
+float directionalLightPos[4]{ -10.0f, 5.0f, 10.0f, 0.0f };
 float directionalLightDir[4]{ -1000.0f, 3000.0f, 1000.0f, 0.0f };
 float pointLightPos[NUM_POINT_LIGHTS][4]{
 	{ 40.0F, 1.5F, -35.0F, 1.0F },
@@ -494,7 +496,7 @@ bool paddle_is_in_the_water(SceneElement paddle) {
 		paddle.rotation[0] < 0 && ((int)paddle.rotation[0] % 360 > -50 || (int)paddle.rotation[0] % 360 < -305);
 }
 
-void rotateBillboard(SceneElement element, float* cam, float* worldPos) {
+void rotateBillboard(SceneElement* element, float* cam, float* worldPos) {
 
 	float lookAt[3] = { 0,0,1 }, objToCamProj[3], upAux[3], angleCosine;
 
@@ -522,7 +524,7 @@ void rotateBillboard(SceneElement element, float* cam, float* worldPos) {
 	// if the lookAt and v vectors are too close together then |aux| could
 	// be bigger than 1 due to lack of precision
 	if ((angleCosine < 0.99990) && (angleCosine > -0.9999)) {
-		element.rotation = { (float)(acos(angleCosine) * 180 / 3.14), upAux[0], upAux[1], upAux[2] };
+		element->rotation = { (float)(acos(angleCosine) * 180 / 3.14), upAux[0], upAux[1], upAux[2] };
 	}
 }
 
@@ -713,6 +715,8 @@ void drawParticles() {
 
 			pushMatrix(MODEL);
 			translate(MODEL, particula[i].x, particula[i].y, particula[i].z);
+			//rotateBillboard(&particle_element, &cameras[activeCamera].getPosition()[0], &particle_element.translation[0]);
+			//rotate(MODEL, particle_element.rotation);
 
 			// send matrices to OGL
 			computeDerivedMatrix(PROJ_VIEW_MODEL);
@@ -1445,12 +1449,12 @@ void renderScene(void) {
 	glUniform1i(shadowMode_uniformId, 0);  //Render with constant color
 	ground_node.draw(false, false);
 
-	if (shadowsActive) {
+	if (shadowsActive && dirLightActive) {
 		glUniform1i(shadowMode_uniformId, 1);  //Render with constant color
 		glDisable(GL_DEPTH_TEST); //To force the shadow geometry to be rendered even if behind the floor
 
 		//Dark the color stored in color buffer
-		glBlendFunc(GL_DST_COLOR, GL_ZERO); //do we want this or not???
+		//glBlendFunc(GL_DST_COLOR, GL_ZERO); //do we want this or not???
 		//glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
 
 		scenegraph.draw(true, false);
@@ -1465,7 +1469,7 @@ void renderScene(void) {
 	glStencilFunc(GL_NOTEQUAL, 0x3, 0x3);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
-	rotateBillboard(lighthouse_element, &cameras[activeCamera].getPosition()[0], &lighthouse_element.translation[0]);
+	rotateBillboard(&lighthouse_element, &cameras[activeCamera].getPosition()[0], &lighthouse_element.translation[0]);
 
 	glUniform1i(shadowMode_uniformId, 0);  //Render with constant color
 	scenegraph.draw(false, false);
@@ -1521,7 +1525,13 @@ void renderScene(void) {
 	else if (pauseOn) {
 		RenderText(shaderText, "PAUSE", 440.0f, 384.0f, 1.0f, 0.5f, 0.8f, 0.2f);
 	}
-	RenderText(shaderText, "Time: " + to_string(playTimeMinutes) + ":" + to_string(playTimeSeconds), 25.0f, 710.0f, 1.0f, 0.5f, 0.8f, 0.2f);
+	std::stringstream timeStream;
+	timeStream << std::setw(2) << std::setfill('0') << playTimeMinutes << ":"
+		<< std::setw(2) << std::setfill('0') << playTimeSeconds;
+
+	std::string formattedTime = timeStream.str();
+
+	RenderText(shaderText, "Time: " + formattedTime, 25.0f, 710.0f, 1.0f, 0.5f, 0.8f, 0.2f);
 	RenderText(shaderText, "Lives: " + to_string(livesRemaining), 25.0f, 650.0f, 1.0f, 0.5f, 0.8f, 0.2f);
 	RenderText(shaderText, "Level: " + to_string(level), 800.0f, 710.0f, 1.0f, 0.5f, 0.8f, 0.2f);
 	//RenderText(shaderText, "This is a sample text", 25.0f, 25.0f, 1.0f, 0.5f, 0.8f, 0.2f);
@@ -2191,7 +2201,7 @@ void initMap()
 	memcpy(lighthouse_element.mesh.mat.emissive, emissive, 4 * sizeof(float));
 	lighthouse_element.mesh.mat.shininess = shininess;
 	lighthouse_element.mesh.mat.texCount = texcount;
-	lighthouse_element.translation = { 75.0F, 13.0F, 160.0F };
+	lighthouse_element.translation = { -75.0F, 13.0F, 160.0F };
 	lighthouse_element.rotation = { 180.0F, 0.0F, 1.0F, 0.0F };
 	lighthouse_node = ScenegraphNode(&lighthouse_element, &shader, LIGHTHOUSE_BILLBOARD_TEXTURE);
 	scenegraph.addNode(&lighthouse_node);
@@ -2698,7 +2708,7 @@ void init()
 		//creation of Mymesh array with VAO Geometry and Material and array of Texture Objs for the model input by the user
 		spider_element.meshes = createMeshFromAssimp(spider_element.scene, spider_element.textureIds);
 
-		spider_element.translation = { 0.0F, 0.0F, 0.0F }; //Starting position
+		spider_element.translation = { 14.0F, 0.65F, -4.0F }; //Starting position
 		spider_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 		spider_element.scale = { scaleFactor, scaleFactor, scaleFactor };
 		spider_element.usingAssimp = true;
