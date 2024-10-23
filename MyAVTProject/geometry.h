@@ -27,7 +27,7 @@ struct MyMesh {
 	};
 
 struct SceneElement {
-	int numTextures;
+	int numTextures = 0;
 	bool usingAssimp = false;
 	const aiScene* scene;
 	std::vector<struct MyMesh> meshes;

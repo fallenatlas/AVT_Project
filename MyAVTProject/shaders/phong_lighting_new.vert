@@ -5,6 +5,7 @@
 
 uniform mat4 m_pvm;
 uniform mat4 m_viewModel;
+uniform mat4 m_Model;   //por causa do cubo para a skybox
 uniform mat3 m_normal;
 
 uniform vec4 l_pos;
@@ -38,6 +39,7 @@ out Data {
 	vec3 lightDir;
 	vec2 tex_coord;
 	vec3 viewEye;
+	vec3 skyboxTexCoord;
 
 	vec3 directionalLightDir; // compute these, maybe test if this works first
 	vec3 pointLightsDir[NUM_POINT_LIGHTS_VERT];
@@ -58,6 +60,9 @@ void main () {
 	DataOut.lightDir = vec3(l_pos - pos);
 	DataOut.viewEye = vec3(-pos);
 	eyeDir =  vec3(-pos);
+
+	DataOut.skyboxTexCoord = vec3(m_Model * position);
+	DataOut.skyboxTexCoord.x = - DataOut.skyboxTexCoord.x; //Texturas mapeadas no interior logo negar a coordenada x
 	DataOut.tex_coord = texCoord.st;
 
 	if(normalMap)  {  //transform eye and light vectors by tangent basis

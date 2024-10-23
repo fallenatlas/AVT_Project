@@ -7,7 +7,9 @@ uniform	sampler2D texUnitDiff;
 uniform	sampler2D texUnitDiff1;
 uniform	sampler2D texUnitSpec;
 uniform	sampler2D texUnitNormalMap;
+uniform samplerCube cubeMap;
 
+uniform int texMode;
 uniform int fogOn;
 uniform int dirLightOn;
 uniform int pointLightsOn;
@@ -32,6 +34,7 @@ in Data {
 	vec3 lightDir;
 	vec2 tex_coord;
 	vec3 viewEye;
+	vec3 skyboxTexCoord;
 
 	vec3 directionalLightDir; // compute these, maybe test if this works first
 	vec3 pointLightsDir[NUM_POINT_LIGHTS];
@@ -46,8 +49,12 @@ uniform uint diffMapCount;
 
 uniform bool shadowMode;
 
+uniform mat4 m_View;
+
 vec4 diff, auxSpec;
 vec4 diffSum, specSum;
+
+const float reflect_factor = 0.9;
 
 void calculateDirLight(vec3 lightDir, vec3 n, vec3 e);
 void calculatePointLight(vec3 lightDir, vec3 n, vec3 e);
@@ -112,6 +119,30 @@ void main()
 		}
 	
 		res = max(diffSum.rgb, diff.rgb*0.15) + specSum.rgb;
+
+		if (texMode == 7) //SkyBox
+			res = texture(cubeMap, DataIn.skyboxTexCoord).rgb;
+		if (texMode == 8) {
+			vec4 spec = vec4(0.0);
+			vec3 l = normalize(DataIn.directionalLightDir);
+			float intensity = max(dot(n,l), 0.0);
+
+			if (intensity > 0.0) {
+				vec3 h = normalize(l + e);
+				float intSpec = max(dot(h,n), 0.0);
+				spec = auxSpec * pow(intSpec, mat.shininess);
+			}
+
+			vec4 texel, texel1, cube_texel;
+			vec3 reflected1 = vec3 (transpose(m_View) * vec4 (vec3(reflect(-e, n)), 0.0)); //reflection vector in world coord
+			reflected1.x= -reflected1.x;   
+			cube_texel = texture(cubeMap, reflected1);
+			texel = texture(texUnitDiff, DataIn.tex_coord);  // texel from lighwood.tga
+			vec4 aux_color = mix(texel, cube_texel, reflect_factor);
+			aux_color = max(intensity*aux_color + spec, 0.1*aux_color);
+			res = aux_color.rgb;
+		}
+
 		// Fog calculation
 		if (fogOn == 1) {
 			vec3 fogColor = vec3(0.7, 0.7, 0.7);

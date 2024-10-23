@@ -144,6 +144,11 @@ const int STONE_TEXTURE = 3;
 const int PEBBLES_AND_GRASS_TEXTURE = 4;
 const int WATER_TEXTURE = 5;
 const int LIGHTHOUSE_BILLBOARD_TEXTURE = 6;
+const int SKYBOX_TEXTURE = 7;
+const int CUBE_ENV_MAPPING_TEXTURE = 8;
+
+GLuint CubeMapTextureArray[1];
+MyMesh skyboxMesh;
 
 // Scene Nodes
 ScenegraphNode ground_node;
@@ -1141,6 +1146,77 @@ void drawMirror() {
 	cameras[0].updateProjectionMatrix(ratio);
 }
 
+void renderSkybox() {
+	glUseProgram(shader.getProgramIndex());
+
+	GLint tex_cube_loc = glGetUniformLocation(shader.getProgramIndex(), "cubeMap");
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, CubeMapTextureArray[0]);
+	glUniform1i(tex_cube_loc, 4);
+
+	// Render Sky Box
+	GLint loc;
+	GLint pvm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_pvm");
+	GLint model_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_Model");
+	GLint texMode_uniformId = glGetUniformLocation(shader.getProgramIndex(), "texMode");
+	glUniform1i(texMode_uniformId, SKYBOX_TEXTURE);
+
+	GLint vm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_viewModel");
+	GLint normal_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_normal");
+	GLint normalMap_loc = glGetUniformLocation(shader.getProgramIndex(), "normalMap");
+	GLint specularMap_loc = glGetUniformLocation(shader.getProgramIndex(), "specularMap");
+	GLint diffMapCount_loc = glGetUniformLocation(shader.getProgramIndex(), "diffMapCount");
+
+	// send the material
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.ambient");
+	glUniform4fv(loc, 1, skyboxMesh.mat.ambient);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.diffuse");
+	glUniform4fv(loc, 1, skyboxMesh.mat.diffuse);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.specular");
+	glUniform4fv(loc, 1, skyboxMesh.mat.specular);
+	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
+	glUniform1f(loc, skyboxMesh.mat.shininess);
+
+	//devido ao fragment shader suporta 2 texturas difusas simultaneas, 1 especular e 1 normal map
+
+	glUniform1i(normalMap_loc, false);   //GLSL normalMap variable initialized to 0
+	glUniform1i(specularMap_loc, false); //
+	glUniform1ui(diffMapCount_loc, 0); // this is for knowing how many texture we want to use
+
+	//it won't write anything to the zbuffer; all subsequently drawn scenery to be in front of the sky box. 
+	glDepthMask(GL_FALSE);
+	glFrontFace(GL_CW); // set clockwise vertex order to mean the front
+
+	pushMatrix(MODEL);
+	pushMatrix(VIEW);  //se quiser anular a translação
+
+	//  Fica mais realista se não anular a translação da câmara 
+	// Cancel the translation movement of the camera - de acordo com o tutorial do Antons
+	mMatrix[VIEW][12] = 0.0f;
+	mMatrix[VIEW][13] = 0.0f;
+	mMatrix[VIEW][14] = 0.0f;
+
+	scale(MODEL, 300.0f, 300.0f, 300.0f);
+	translate(MODEL, -0.5f, -0.5f, -0.5f);
+
+	// send matrices to OGL
+	glUniformMatrix4fv(model_uniformId, 1, GL_FALSE, mMatrix[MODEL]); //Transformação de modelação do cubo unitário para o "Big Cube"
+	computeDerivedMatrix(PROJ_VIEW_MODEL);
+	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
+	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
+	computeNormalMatrix3x3();
+	glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
+
+	glBindVertexArray(skyboxMesh.vao);
+	glDrawElements(skyboxMesh.type, skyboxMesh.numIndexes, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	popMatrix(MODEL);
+	popMatrix(VIEW);
+
+	glFrontFace(GL_CCW); // restore counter clockwise vertex order to mean the front
+	glDepthMask(GL_TRUE);
+}
+
 void renderMirrorView() {
 
 	GLint loc;
@@ -1172,6 +1248,8 @@ void renderMirrorView() {
 
 	glStencilFunc(GL_EQUAL, 0x3, 0x3);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	renderSkybox();
 
 	ground_node.draw(false, false);
 	scenegraph.draw(false, false);
@@ -1291,13 +1369,19 @@ void renderScene(void) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// draw scene where the stencil isn't at
-	glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
+	glStencilFunc(GL_NOTEQUAL, 0x3, 0x3);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	// render the skybox
+	renderSkybox();
 
 	// Render the Shadows
 	float mat[16];
 	GLfloat plano_chao[4] = { 0,1,0,0 };
 	GLint shadowMode_uniformId = glGetUniformLocation(shader.getProgramIndex(), "shadowMode");
+
+	GLint view_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_View");
+	glUniformMatrix4fv(view_uniformId, 1, GL_FALSE, mMatrix[VIEW]);
 
 	if (cameraPos[0] > 0.0F) {
 		// DO REFLECTIONS
@@ -1674,10 +1758,12 @@ GLuint setupShaders() {
 	glLinkProgram(shader.getProgramIndex());
 	printf("InfoLog for Model Rendering Shader\n%s\n\n", shaderText.getAllInfoLogs().c_str());
 
+	/*
 	if (!shader.isProgramValid()) {
 		printf("GLSL Model Program Not Valid!\n");
 		exit(1);
 	}
+	*/
 
 	printf("InfoLog for Per Fragment Phong Lightning Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
 
@@ -1719,6 +1805,24 @@ void initRearViewMirror() {
 	memcpy(mirrorMesh.mat.emissive, emissive, 4 * sizeof(float));
 	mirrorMesh.mat.shininess = shininess;
 	mirrorMesh.mat.texCount = texcount;
+}
+
+void initSkybox() {
+	float amb[] = { 0.2f, 0.15f, 0.1f, 1.0f };
+	float diff[] = { 0.8f, 0.6f, 0.4f, 1.0f };
+	float spec[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+	float emissive[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float shininess = 100.0f;
+	int texcount = 0;
+
+	// create geometry and VAO of the cube
+	skyboxMesh = createCube();
+	memcpy(skyboxMesh.mat.ambient, amb, 4 * sizeof(float));
+	memcpy(skyboxMesh.mat.diffuse, diff, 4 * sizeof(float));
+	memcpy(skyboxMesh.mat.specular, spec, 4 * sizeof(float));
+	memcpy(skyboxMesh.mat.emissive, emissive, 4 * sizeof(float));
+	skyboxMesh.mat.shininess = shininess;
+	skyboxMesh.mat.texCount = texcount;
 }
 
 void initMap()
@@ -1765,7 +1869,7 @@ void initMap()
 	island1_ground_element.translation = { 0.0F, -2.0F, 0.0F }; //Starting position
 	island1_ground_element.rotation = { 0.0F, 0.0F, 1.0F, 0.0F };
 	island1_ground_element.scale = { 10.0f, 2.5f, 10.0f };
-	island1_ground_node = ScenegraphNode(&island1_ground_element, &shader, PEBBLES_AND_GRASS_TEXTURE);
+	island1_ground_node = ScenegraphNode(&island1_ground_element, &shader, CUBE_ENV_MAPPING_TEXTURE);
 	island1_node.addNode(&island1_ground_node);
 
 	island2_element.translation = { 30.0F, 0.0F, 0.0F }; //Starting position
@@ -2507,6 +2611,7 @@ void init()
 	cameras[2] = Camera(1, 20.0F, 0.0F, 90.0F);
 
 	initRearViewMirror();
+	initSkybox();
 	initBoat();
 	initCreatures();
 	initMap(); // this needs to be last so that water is drawn last (because of transparency)
@@ -2559,6 +2664,13 @@ void init()
 	Texture2D_Loader(FlareTextureArray, "ring.tga", 3);
 	Texture2D_Loader(FlareTextureArray, "sun.tga", 4);
 
+	// Cube map texture
+	//Array com 4 Texture Objects
+	glGenTextures(1, CubeMapTextureArray);
+	//Sky Box Texture Object
+	const char* filenames[] = { "posx.jpg", "negx.jpg", "posy.jpg", "negy.jpg", "posz.jpg", "negz.jpg" };
+	TextureCubeMap_Loader(CubeMapTextureArray, filenames, 0);
+
 	float scaleFactor;
 
 	// Test assimp mesh
@@ -2598,6 +2710,9 @@ void init()
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);		 // cull back face
+	glFrontFace(GL_CCW); // set counter-clockwise vertex order to mean the front
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_MULTISAMPLE);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClearStencil(0x0);
