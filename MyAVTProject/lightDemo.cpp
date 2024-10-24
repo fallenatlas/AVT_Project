@@ -328,7 +328,7 @@ float playTime = 0.0F;
 int playTimeMinutes = 0;
 int playTimeSeconds = 0;
 int level = 0;
-int livesRemaining = 1;
+int livesRemaining = 3;
 bool deathOn = false;
 bool pauseOn = false;
 
