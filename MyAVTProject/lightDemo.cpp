@@ -1304,7 +1304,7 @@ void renderMirrorView() {
 	}
 
 	// DO SHADOWS
-	glStencilFunc(GL_NOTEQUAL, 0x0, 0x4);
+	glStencilFunc(GL_NOTEQUAL, 0x0, 0x3);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
 
 	// Fill stencil buffer with Ground shape; never rendered into color buffer
