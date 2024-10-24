@@ -104,7 +104,7 @@ char s[32];
 
 // Lights
 //float lightPos[4] = {4.0f, 6.0f, 2.0f, 1.0f};
-float directionalLightPos[4]{ -10.0f, 30.0f, 10.0f, 0.0f };
+float directionalLightPos[4]{ 13.0f, 30.0f, 14.0f, 0.0f };
 float directionalLightDir[4]{ -1000.0f, 3000.0f, 1000.0f, 0.0f };
 float pointLightPos[NUM_POINT_LIGHTS][4]{
 	{ 40.0F, 1.5F, -35.0F, 1.0F },
