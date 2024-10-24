@@ -23,7 +23,7 @@ void Scenegraph::draw(bool shadowMode, bool reflectionMode) {
           if (shadowMode) {
               float mat[16];
               GLfloat plano_chao[4] = { 0,1,0,2 };
-              float pointLightPos[] = { -100.0F, 300.0F, 100.0F, 1.0F };
+              float pointLightPos[] = { 13.0f, 30.0f, 14.0f, 0.0f };
               shadow_matrix(mat, plano_chao, pointLightPos);
               multMatrix(MODEL, mat);
           }
