@@ -9,7 +9,7 @@ uniform	sampler2D texUnitSpec;
 uniform	sampler2D texUnitNormalMap;
 uniform samplerCube cubeMap;
 
-uniform int texMode;
+uniform int shaderMode;
 uniform int fogOn;
 uniform int dirLightOn;
 uniform int pointLightsOn;
@@ -56,6 +56,12 @@ vec4 diffSum, specSum;
 
 const float reflect_factor = 0.9;
 
+// Point light attenuation parameters
+const float constant = 1.0;
+const float linear = 0.07;
+const float quadratic = 0.017;
+
+
 void calculateDirLight(vec3 lightDir, vec3 n, vec3 e);
 void calculatePointLight(vec3 lightDir, vec3 n, vec3 e);
 void calculateSpotLight(vec3 lightDir, vec3 pointingDir, float cutOff, vec3 n, vec3 e);
@@ -64,7 +70,7 @@ void main()
 {
 	if (mat.diffuse.a == 0.0) discard;
 
-	if(shadowMode) {  //constant color
+	if (shadowMode) {  //constant color
 		vec3 res = vec3(0.5, 0.5, 0.5);
 		// Fog calculation
 		if (fogOn == 1) {
@@ -76,6 +82,12 @@ void main()
 			res = mix(fogColor, res, fogFactor);
 		}
 		colorOut = vec4(res, mat.diffuse.a);
+	}
+	else if (shaderMode == 3) { // Lens flare
+		if (fogOn == 1)
+			colorOut = vec4(0); //Don't show flare if fog on
+		else
+			colorOut = mat.diffuse * texture(texUnitDiff, DataIn.tex_coord);
 	}
 	else {
 		vec3 n;
@@ -89,14 +101,14 @@ void main()
 		vec3 res = vec3(0.0);
 
 		// determine diff color and spec color
-		if(diffMapCount == 0)
+		if (diffMapCount == 0)
 			diff = mat.diffuse;
 		else if(diffMapCount == 1)
 			diff = mat.diffuse * texture(texUnitDiff, DataIn.tex_coord);
 		else
 			diff = mat.diffuse * texture(texUnitDiff, DataIn.tex_coord) * texture(texUnitDiff1, DataIn.tex_coord);
 
-		if(specularMap) 
+		if (specularMap) 
 			auxSpec = mat.specular * texture(texUnitSpec, DataIn.tex_coord);
 		else
 			auxSpec = mat.specular;
@@ -120,9 +132,10 @@ void main()
 	
 		res = max(diffSum.rgb, diff.rgb*0.15) + specSum.rgb;
 
-		if (texMode == 7) //SkyBox
+		if (shaderMode == 1) //SkyBox
 			res = texture(cubeMap, DataIn.skyboxTexCoord).rgb;
-		if (texMode == 8) {
+
+		if (shaderMode == 2) { //Cube env mapping
 			vec4 spec = vec4(0.0);
 			vec3 l = normalize(DataIn.directionalLightDir);
 			float intensity = max(dot(n,l), 0.0);
@@ -153,12 +166,7 @@ void main()
 			res = mix(fogColor, res, fogFactor);
 		}
 
-		// check if the last paramater of output isn't wrong
-		//colorOut = vec4(max(res.rgb, mat.ambient.rgb), mat.diffuse.a);
 		colorOut = vec4(res, diff.a);
-		// check if the last paramater of output isn't wrong
-		//colorOut = vec4(max(res.rgb, mat.ambient.rgb), mat.diffuse.a);
-		//colorOut = vec4(res, mat.diffuse.a); // previous one
 	}
 }
 
@@ -183,6 +191,9 @@ void calculatePointLight(vec3 lightDir, vec3 n, vec3 e)
 {
 	vec4 spec = vec4(0.0);
 
+	float dist = length(lightDir);
+	float attenuation = 1.0 / (constant + linear * dist + quadratic * (dist * dist)); // Constants to be tuned
+
 	vec3 l = normalize(lightDir);
     float intensity = max(dot(n,l), 0.0);
 
@@ -192,8 +203,8 @@ void calculatePointLight(vec3 lightDir, vec3 n, vec3 e)
 		spec = auxSpec * pow(intSpec, mat.shininess);
 	}
 	
-	diffSum += intensity * diff;
-	specSum += spec;
+	diffSum += attenuation * intensity * diff;
+	specSum += attenuation * spec;
 }
 
 void calculateSpotLight(vec3 lightDir, vec3 pointingDir, float cutOff, vec3 n, vec3 e) // should be just position for now

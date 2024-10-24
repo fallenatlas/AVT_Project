@@ -65,7 +65,7 @@ void main () {
 	DataOut.skyboxTexCoord.x = - DataOut.skyboxTexCoord.x; //Texturas mapeadas no interior logo negar a coordenada x
 	DataOut.tex_coord = texCoord.st;
 
-	if(normalMap)  {  //transform eye and light vectors by tangent basis
+	if (normalMap) {  //transform eye and light vectors by tangent basis
 		t = normalize(m_normal * tangent.xyz);
 		b = normalize(m_normal * bitangent.xyz);
 
@@ -75,15 +75,15 @@ void main () {
 		aux.z = dot(temp, n);
 		DataOut.directionalLightDir = normalize(aux);
 
-		for(int i = 0; i < NUM_POINT_LIGHTS_VERT; i++) {
+		for (int i = 0; i < NUM_POINT_LIGHTS_VERT; i++) {
 			temp = vec3(pointLights[i].position - pos);
 			aux.x = dot(temp, t);
 			aux.y = dot(temp, b);
 			aux.z = dot(temp, n);
-			DataOut.pointLightsDir[i] = normalize(aux); // try not normalizing
+			DataOut.pointLightsDir[i] = aux; // try not normalizing
 		}
 
-		for(int i = 0; i < NUM_SPOT_LIGHTS_VERT; i++) {
+		for (int i = 0; i < NUM_SPOT_LIGHTS_VERT; i++) {
 			temp = vec3(spotLights[i].position - pos);
 			aux.x = dot(temp, t);
 			aux.y = dot(temp, b);

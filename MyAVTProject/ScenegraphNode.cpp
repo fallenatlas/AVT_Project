@@ -5,10 +5,10 @@
 
 ScenegraphNode::ScenegraphNode() {}
 
-ScenegraphNode::ScenegraphNode(SceneElement* element, VSShaderLib* shader, int texture) {
+ScenegraphNode::ScenegraphNode(SceneElement* element, VSShaderLib* shader, int shaderMode) {
     Element = element;
     Shader = shader;
-    TextureMode = texture;
+	ShaderMode = shaderMode;
 }
 
 ScenegraphNode::~ScenegraphNode() {}
@@ -29,8 +29,6 @@ void ScenegraphNode::aiRecursive_render(const aiNode* nd, std::vector<struct MyM
 	GLint normalMap_loc = glGetUniformLocation(Shader->getProgramIndex(), "normalMap");
 	GLint specularMap_loc = glGetUniformLocation(Shader->getProgramIndex(), "specularMap");
 	GLint diffMapCount_loc = glGetUniformLocation(Shader->getProgramIndex(), "diffMapCount");
-	//GLint texMode_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "texMode"); // different modes of texturing
-	// I think now texMode will be diffMapCount
 
 	// Get node transformation matrix
 	aiMatrix4x4 m = nd->mTransformation;
@@ -154,7 +152,7 @@ void ScenegraphNode::draw(bool shadowMode, bool reflectionMode) {
 			GLint vm_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "m_viewModel");
 			GLint normal_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "m_normal");
 			GLint lPos_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "l_pos");
-			GLint texMode_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "texMode"); // different modes of texturing
+			GLint shaderMode_uniformId = glGetUniformLocation(Shader->getProgramIndex(), "shaderMode");
 			GLint normalMap_loc = glGetUniformLocation(Shader->getProgramIndex(), "normalMap");
 			GLint specularMap_loc = glGetUniformLocation(Shader->getProgramIndex(), "specularMap");
 			GLint diffMapCount_loc = glGetUniformLocation(Shader->getProgramIndex(), "diffMapCount");
@@ -171,7 +169,7 @@ void ScenegraphNode::draw(bool shadowMode, bool reflectionMode) {
 
 			//devido ao fragment shader suporta 2 texturas difusas simultaneas, 1 especular e 1 normal map
 
-			glUniform1i(normalMap_loc, false);   //GLSL normalMap variable initialized to 0
+			glUniform1i(normalMap_loc, Element->normalMapKey);   //GLSL normalMap variable initialized to 0
 			glUniform1i(specularMap_loc, false); //
 			glUniform1ui(diffMapCount_loc, 0); // this is for knowing how many texture we want to use
 
@@ -204,7 +202,7 @@ void ScenegraphNode::draw(bool shadowMode, bool reflectionMode) {
 			glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
 			computeNormalMatrix3x3();
 			glUniformMatrix3fv(normal_uniformId, 1, GL_FALSE, mNormal3x3);
-			glUniform1i(texMode_uniformId, TextureMode);
+			glUniform1i(shaderMode_uniformId, ShaderMode);
 
 			// Render mesh
 			glBindVertexArray(Element->mesh.vao);

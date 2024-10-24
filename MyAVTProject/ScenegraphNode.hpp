@@ -35,7 +35,7 @@ class ScenegraphNode {
     VSShaderLib* Shader;
     std::vector<ScenegraphNode*> Children;
     ScenegraphNode* Parent;
-    int TextureMode;
+    int ShaderMode;
 
 };
 
