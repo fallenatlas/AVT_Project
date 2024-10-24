@@ -1235,6 +1235,9 @@ void renderMirrorView() {
 
 	setNormalLights();
 
+	GLint reflection_loc = glGetUniformLocation(shader.getProgramIndex(), "reflection");
+	glUniform1i(reflection_loc, false);   //GLSL normalMap variable initialized to 0
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -1243,9 +1246,122 @@ void renderMirrorView() {
 
 	renderSkybox();
 
+	GLint shadowMode_uniformId = glGetUniformLocation(shader.getProgramIndex(), "shadowMode");
+	if (cameraPos[0] > 0.0F) {
+		// DO REFLECTIONS
+		glStencilFunc(GL_EQUAL, 0x3, 0x3);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+
+		// Fill stencil buffer with Ground shape; never rendered into color buffer
+		glDisable(GL_DEPTH_TEST);
+		mirror_node.draw(false, false);
+		glEnable(GL_DEPTH_TEST);
+
+		glUniform1i(shadowMode_uniformId, 0);  //iluminação phong
+
+		// Desenhar apenas onde o stencil buffer esta a 1
+		glStencilFunc(GL_EQUAL, 0x4, 0x3);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+		// Render the reflected geometry
+		setReflectionLights();
+
+		glDisable(GL_BLEND);
+
+		pushMatrix(MODEL);
+		glCullFace(GL_FRONT);
+
+		glUniform1i(reflection_loc, true);
+		pushMatrix(MODEL);
+		scale(MODEL, -1.0f, 1.0f, 1.0f);
+		renderSkybox();
+		popMatrix(MODEL);
+		glUniform1i(reflection_loc, false);
+
+		scenegraph.draw(false, true);
+		popMatrix(MODEL);
+
+		pushMatrix(MODEL);
+		scale(MODEL, -1.0f, 1.0f, 1.0f);
+		ground_node.draw(false, false);
+		popMatrix(MODEL);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		pushMatrix(MODEL);
+		scale(MODEL, -1.0f, 1.0f, 1.0f);
+		water_node.draw(false, false);
+		popMatrix(MODEL);
+		glCullFace(GL_BACK);
+
+		setReflectionLights();
+
+		// render mirror
+		glUniform1i(shadowMode_uniformId, 0);  //Render with constant color
+		mirror_node.draw(false, false);
+		// end reflections
+	}
+
+	// DO SHADOWS
+	glStencilFunc(GL_NOTEQUAL, 0x0, 0x4);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+
+	// Fill stencil buffer with Ground shape; never rendered into color buffer
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glDepthMask(GL_FALSE);
 	ground_node.draw(false, false);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glDepthMask(GL_TRUE);
+
+	glStencilFunc(GL_NOTEQUAL, 0x0, 0x3);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	glUniform1i(shadowMode_uniformId, 0);  //Render with constant color
+	ground_node.draw(false, false);
+
+	glStencilFunc(GL_EQUAL, 0x4, 0x3);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	ground_node.draw(false, false);
+
+	if (shadowsActive && dirLightActive) {
+		// Desenhar apenas onde o stencil buffer esta a 1
+		glStencilFunc(GL_EQUAL, 0x4, 0x3);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+		glUniform1i(shadowMode_uniformId, 1);  //Render with constant color
+		glDisable(GL_DEPTH_TEST); //To force the shadow geometry to be rendered even if behind the floor
+
+		//Dark the color stored in color buffer
+		//glBlendFunc(GL_DST_COLOR, GL_ZERO); //do we want this or not???
+		//glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+
+		scenegraph.draw(true, false);
+
+		glEnable(GL_DEPTH_TEST);
+	}
+	// end shadows
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glStencilFunc(GL_NOTEQUAL, 0x0, 0x3);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	//ground_node.draw(false, false);
+	glUniform1i(shadowMode_uniformId, 0);  //Render with constant color
 	scenegraph.draw(false, false);
 	water_node.draw(false, false);
+
+	glStencilFunc(GL_EQUAL, 0x4, 0x3);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	scenegraph.draw(false, false);
+	water_node.draw(false, false);
+
+	// clear stencil
+	glClearStencil(0);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	drawMirror();
 
 	cameras[activeCamera].updateProjectionMatrix(ratio);
 }
@@ -1346,6 +1462,9 @@ void renderScene(void) {
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
+	GLint reflection_loc = glGetUniformLocation(shader.getProgramIndex(), "reflection");
+	glUniform1i(reflection_loc, false);   //GLSL normalMap variable initialized to 0
+
 	renderMirrorView();
 
 	// load identity matrices
@@ -1400,6 +1519,14 @@ void renderScene(void) {
 
 		pushMatrix(MODEL);
 		glCullFace(GL_FRONT);
+
+		glUniform1i(reflection_loc, true);
+		pushMatrix(MODEL);
+		scale(MODEL, -1.0f, 1.0f, 1.0f);
+		renderSkybox();
+		popMatrix(MODEL);
+		glUniform1i(reflection_loc, false);
+
 		scenegraph.draw(false, true);
 		popMatrix(MODEL);
 
@@ -1415,6 +1542,7 @@ void renderScene(void) {
 		scale(MODEL, -1.0f, 1.0f, 1.0f);
 		water_node.draw(false, false);
 		popMatrix(MODEL);
+
 		glCullFace(GL_BACK);
 
 		setReflectionLights();

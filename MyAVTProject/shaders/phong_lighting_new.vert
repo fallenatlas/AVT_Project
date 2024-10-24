@@ -10,6 +10,7 @@ uniform mat3 m_normal;
 
 uniform vec4 l_pos;
 uniform bool normalMap;
+uniform bool reflection;
 
 in vec4 position;
 in vec4 normal, tangent, bitangent;   //por causa do gerador de geometria
@@ -62,7 +63,9 @@ void main () {
 	eyeDir =  vec3(-pos);
 
 	DataOut.skyboxTexCoord = vec3(m_Model * position);
-	DataOut.skyboxTexCoord.x = - DataOut.skyboxTexCoord.x; //Texturas mapeadas no interior logo negar a coordenada x
+	if (!reflection) {
+		DataOut.skyboxTexCoord.x = - DataOut.skyboxTexCoord.x; //Texturas mapeadas no interior logo negar a coordenada x
+	}
 	DataOut.tex_coord = texCoord.st;
 
 	if (normalMap) {  //transform eye and light vectors by tangent basis
