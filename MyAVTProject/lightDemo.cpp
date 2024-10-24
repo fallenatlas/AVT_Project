@@ -1247,6 +1247,9 @@ void renderMirrorView() {
 
 	setNormalLights();
 
+	GLint reflection_loc = glGetUniformLocation(shader.getProgramIndex(), "reflection");
+	glUniform1i(reflection_loc, false);   //GLSL normalMap variable initialized to 0
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -1279,6 +1282,14 @@ void renderMirrorView() {
 
 		pushMatrix(MODEL);
 		glCullFace(GL_FRONT);
+
+		glUniform1i(reflection_loc, true);
+		pushMatrix(MODEL);
+		scale(MODEL, -1.0f, 1.0f, 1.0f);
+		renderSkybox();
+		popMatrix(MODEL);
+		glUniform1i(reflection_loc, false);
+
 		scenegraph.draw(false, true);
 		popMatrix(MODEL);
 
@@ -1461,6 +1472,9 @@ void renderScene(void) {
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
+	GLint reflection_loc = glGetUniformLocation(shader.getProgramIndex(), "reflection");
+	glUniform1i(reflection_loc, false);   //GLSL normalMap variable initialized to 0
+
 	renderMirrorView();
 
 	// load identity matrices
@@ -1515,6 +1529,14 @@ void renderScene(void) {
 
 		pushMatrix(MODEL);
 		glCullFace(GL_FRONT);
+
+		glUniform1i(reflection_loc, true);
+		pushMatrix(MODEL);
+		scale(MODEL, -1.0f, 1.0f, 1.0f);
+		renderSkybox();
+		popMatrix(MODEL);
+		glUniform1i(reflection_loc, false);
+
 		scenegraph.draw(false, true);
 		popMatrix(MODEL);
 
@@ -1530,6 +1552,7 @@ void renderScene(void) {
 		scale(MODEL, -1.0f, 1.0f, 1.0f);
 		water_node.draw(false, false);
 		popMatrix(MODEL);
+
 		glCullFace(GL_BACK);
 
 		setReflectionLights();
