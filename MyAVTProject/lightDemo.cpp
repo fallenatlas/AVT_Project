@@ -883,7 +883,7 @@ void refresh(int value)
 		haddle_monster_movement();
 
 		cameras[0].target[0] = boat_element.translation[0];
-		cameras[0].target[1] = boat_element.translation[1];
+		cameras[0].target[1] = boat_element.translation[1] + 2;
 		cameras[0].target[2] = boat_element.translation[2];
 
 		for (int i = 0; i < NUM_SPOT_LIGHTS; i++) {
