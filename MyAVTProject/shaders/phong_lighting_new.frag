@@ -69,7 +69,7 @@ void calculateSpotLight(vec3 lightDir, vec3 pointingDir, float cutOff, vec3 n, v
 void main()
 {
 	if (mat.diffuse.a == 0.0) discard;
-
+	
 	if (shadowMode) {  //constant color
 		vec3 res = vec3(0.5, 0.5, 0.5);
 		// Fog calculation
@@ -103,8 +103,10 @@ void main()
 		// determine diff color and spec color
 		if (diffMapCount == 0)
 			diff = mat.diffuse;
-		else if(diffMapCount == 1)
+		else if(diffMapCount == 1) {
 			diff = mat.diffuse * texture(texUnitDiff, DataIn.tex_coord);
+			if (diff.a == 0) discard;
+		}
 		else
 			diff = mat.diffuse * texture(texUnitDiff, DataIn.tex_coord) * texture(texUnitDiff1, DataIn.tex_coord);
 

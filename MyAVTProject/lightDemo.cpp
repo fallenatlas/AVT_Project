@@ -727,7 +727,7 @@ void drawParticles() {
 	glEnable(GL_CULL_FACE);
 }
 
-void haddle_movement() {
+void handle_movement() {
 	int rotation_dir = 1;
 	if (key_s_is_pressed)
 		rotation_dir = -1;
@@ -753,7 +753,7 @@ void haddle_movement() {
 		left_paddle_node.spin(rotation);
 		if (paddle_is_in_the_water(left_paddle_element)) {
 			boat.increaseSpeed(boat.acceleration * rotation_dir);
-			rotation = { 1.0F * rotation_dir, 0, 0, 0 };
+			rotation = { -1.0F * rotation_dir, 0, 0, 0 };
 			boat_node.spin(rotation);
 			boat.setDirection(boat_element.rotation);
 			cameras[0].boatAngle = boat_element.rotation[0];
@@ -766,7 +766,7 @@ void haddle_movement() {
 		right_paddle_node.spin(rotation);
 		if (paddle_is_in_the_water(right_paddle_element)) {
 			boat.increaseSpeed(boat.acceleration * rotation_dir);
-			rotation = { -1.0F * rotation_dir, 0, 0, 0 };
+			rotation = { 1.0F * rotation_dir, 0, 0, 0 };
 			boat_node.spin(rotation);
 			boat.setDirection(boat_element.rotation);
 			cameras[0].boatAngle = boat_element.rotation[0];
@@ -810,7 +810,7 @@ void respawn_monster(ScenegraphNode* monster_node, Boat* monster) {
 	monster->setDirection(respawn_rotation);
 }
 
-void haddle_monster_movement() {
+void handle_monster_movement() {
 	float deltaTime = 1.0F / 60.0F;
 	std::vector<float> movement1{ 0.0F, 0.0F, 0.0F };
 	std::vector<float> movement2{ 0.0F, 0.0F, 0.0F };
@@ -878,9 +878,9 @@ void refresh(int value)
 	if (!pauseOn && !deathOn) {
 		handle_collisions();
 
-		haddle_movement();
+		handle_movement();
 
-		haddle_monster_movement();
+		handle_monster_movement();
 
 		cameras[0].target[0] = boat_element.translation[0];
 		cameras[0].target[1] = boat_element.translation[1] + 2;
@@ -1218,6 +1218,7 @@ void renderMirrorView() {
 	// load identity matrices
 	loadIdentity(VIEW);
 	loadIdentity(MODEL);
+
 	// set the camera using a function similar to gluLookAt
 	vector<float> cameraPos = cameras[activeCamera].getPosition();
 	vector<float> direction = { cameraPos[0] - cameras[activeCamera].target[0], cameraPos[1] - cameras[activeCamera].target[1], cameraPos[2] - cameras[activeCamera].target[2] };
