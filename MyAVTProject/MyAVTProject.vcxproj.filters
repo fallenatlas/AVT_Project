@@ -97,29 +97,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\pointlight_phong.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\pointlight_phong.vert">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="Dependencies.exe" />
     <None Include="shaders\text.frag">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\text.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\pointlight_gourand.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\pointlight_gourand.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\phong_lighting.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\phong_lighting.vert">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\phong_lighting_new.frag">
