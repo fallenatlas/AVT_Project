@@ -23,7 +23,6 @@
 // include GLEW to access OpenGL 3.3 functions
 #include <GL/glew.h>
 
-
 // GLUT is the toolkit to interface with the OS
 #include <GL/freeglut.h>
 
@@ -33,8 +32,6 @@
 #include "assimp/Importer.hpp"	//OO version Header!
 #include "assimp/scene.h"
 
-
-// Use Very Simple Libs
 #include "VSShaderlib.h"
 #include "AVTmathLib.h"
 #include "VertexAttrDef.h"
@@ -45,12 +42,11 @@
 #include "Texture_Loader.h"
 #include "meshFromAssimp.h"
 #include "flare.h"
-
 #include "avtFreeType.h"
 
 using namespace std;
 
-#define CAPTION "AVT Demo: Phong Shading and Text rendered with FreeType"
+#define CAPTION "AVT Project Group 3"
 #define NUM_POINT_LIGHTS 6
 #define NUM_SPOT_LIGHTS 2
 
@@ -147,7 +143,7 @@ const int LENS_FLARE_MODE = 3;
 GLuint CubeMapTextureArray[1];
 MyMesh skyboxMesh;
 
-// Scene Nodes
+//------------- Scene Nodes -------------------------
 ScenegraphNode ground_node;
 ScenegraphNode water_node;
 ScenegraphNode ob1_node;
@@ -156,10 +152,9 @@ ScenegraphNode ob3_node;
 ScenegraphNode ob4_node;
 ScenegraphNode ob5_node;
 ScenegraphNode ob6_node;
-ScenegraphNode house1_node;
-ScenegraphNode house2_node;
-ScenegraphNode house3_node;
-ScenegraphNode house4_node;
+ScenegraphNode mirror_node;
+
+// Boat
 ScenegraphNode boat_node;
 ScenegraphNode boat_part1_node;
 ScenegraphNode boat_part2_node;
@@ -169,6 +164,9 @@ ScenegraphNode left_paddle_part2_node;
 ScenegraphNode right_paddle_node;
 ScenegraphNode right_paddle_part1_node;
 ScenegraphNode right_paddle_part2_node;
+ScenegraphNode backpack_node;
+
+// Monsters
 ScenegraphNode monster1_node;
 ScenegraphNode monster1_aabb_box_node;
 ScenegraphNode monster1_part1_node;
@@ -204,13 +202,13 @@ ScenegraphNode tree3_up_node;
 ScenegraphNode tree4_down_node;
 ScenegraphNode tree4_up_node;
 ScenegraphNode lighthouse_node;
-ScenegraphNode house_node;
-
-ScenegraphNode backpack_node;
+ScenegraphNode house1_node;
+ScenegraphNode house2_node;
+ScenegraphNode house3_node;
+ScenegraphNode house4_node;
 ScenegraphNode spider_node;
-ScenegraphNode mirror_node;
 
-// Scene Elements
+// ----------------- Scene Elements -----------------------
 SceneElement ground_element;
 SceneElement water_element;
 SceneElement ob1_element;
@@ -219,10 +217,10 @@ SceneElement ob3_element;
 SceneElement ob4_element;
 SceneElement ob5_element;
 SceneElement ob6_element;
-SceneElement house1_element;
-SceneElement house2_element;
-SceneElement house3_element;
-SceneElement house4_element;
+SceneElement lighthouse_element;
+SceneElement mirror_element;
+
+// Boat
 SceneElement boat_element;
 SceneElement boat_part1_element;
 SceneElement boat_part2_element;
@@ -232,6 +230,9 @@ SceneElement left_paddle_part2_element;
 SceneElement right_paddle_element;
 SceneElement right_paddle_part1_element;
 SceneElement right_paddle_part2_element;
+SceneElement backpack_element;
+
+// Monsters
 SceneElement monster1_element;
 SceneElement monster1_aabb_box_element;
 SceneElement monster1_part1_element;
@@ -266,20 +267,19 @@ SceneElement tree3_down_element;
 SceneElement tree3_up_element;
 SceneElement tree4_down_element;
 SceneElement tree4_up_element;
-
-SceneElement lighthouse_element;
-
-SceneElement backpack_element;
+SceneElement house1_element;
+SceneElement house2_element;
+SceneElement house3_element;
+SceneElement house4_element;
 SceneElement spider_element;
-SceneElement house_element;
+
+// Effects
 SceneElement particle_element;
 SceneElement flare_element;
-SceneElement mirror_element;
 
-// AABBs
+// ----------- AABBs ------------
 AABB boat_aabb;
 
-//bool update_static_aabbs = true;
 AABB island1_aabb;
 AABB island2_aabb;
 AABB island3_aabb;
@@ -295,9 +295,7 @@ AABB ob6_aabb;
 AABB monster1_aabb;
 AABB monster2_aabb;
 
-const std::vector<float> initialBoatPos = { 65.0F, 0.0F, -70.0F };
-const std::vector<float> initialBoatRot = { 0.0F, 0.0F, 1.0F, 0.0F };
-
+// Particles
 typedef struct {
 	float	life;		// vida
 	float	fade;		// fade
@@ -309,6 +307,11 @@ typedef struct {
 
 Particle particula[MAX_PARTICULAS];
 int dead_num_particles = MAX_PARTICULAS;
+
+enum PaddleSide {
+	LEFT,
+	RIGHT
+};
 
 //Flare effect
 FLARE_DEF AVTflare;
@@ -331,12 +334,11 @@ int level = 0;
 int livesRemaining = 3;
 bool deathOn = false;
 bool pauseOn = false;
-
+const std::vector<float> initialBoatPos = { 65.0F, 0.0F, -70.0F };
+const std::vector<float> initialBoatRot = { 0.0F, 0.0F, 1.0F, 0.0F };
 float monsterBaseSpeed = 5;
 
 // Assimp stuff
-// May be changed to another location like the scene node
-// Create an instance of the Importer class
 Assimp::Importer importer;
 Assimp::Importer importer1;
 Assimp::Importer importer2;
@@ -392,13 +394,8 @@ void collide_and_resolve(AABB& boat_aabb, AABB& other_aabb, SceneElement& other_
 		other_element.translation = { other_element.translation[0] + pushDirection[0] * info.penetration * abs(boat.speed),
 									  other_element.translation[1],
 									  other_element.translation[2] + pushDirection[2] * info.penetration * abs(boat.speed) };
-		boat.speed = 0; // we might potentially need to change this to like velocity
+		boat.speed = 0;
 	}
-}
-
-void collide_and_resolve_monster(AABB& monster_aabb, AABB& other_aabb) {
-	auto info = monster_aabb.intersepts(other_aabb);
-	// respawn monster
 }
 
 void handle_collisions() {
@@ -479,9 +476,6 @@ void handle_collisions() {
 	// test collision boat and monster
 	collide_and_resolve(boat_aabb, monster1_aabb, monster1_element, true);
 	collide_and_resolve(boat_aabb, monster2_aabb, monster2_element, true);
-
-	// test collision monster and other objs
-	//collide_and_resolve_monster(AABB & monster_aabb, AABB & other_aabb)
 }
 
 bool paddle_is_in_the_water(SceneElement paddle) {
@@ -557,21 +551,16 @@ void createRotationMatrixFromAxisAngle(float angle, float x, float y, float z, f
 	rotMatrix[2][2] = t * z * z + c;
 }
 
-enum PaddleSide {
-	LEFT,
-	RIGHT
-};
-
 void initParticles(PaddleSide side) {
 	GLfloat v, theta, phi;
 	int i, startIdx, endIdx;
 	dead_num_particles = 0;
 
 	// Boat's rotation stored as {angle, x, y, z}
-	float angle = boat_element.rotation[0];  // The rotation angle (in degrees)
-	float axisX = boat_element.rotation[1];  // The rotation axis (x-component)
-	float axisY = boat_element.rotation[2];  // The rotation axis (y-component)
-	float axisZ = boat_element.rotation[3];  // The rotation axis (z-component)
+	float angle = boat_element.rotation[0];
+	float axisX = boat_element.rotation[1];
+	float axisY = boat_element.rotation[2];
+	float axisZ = boat_element.rotation[3];
 
 	// Create rotation matrix based on boat's axis-angle rotation
 	float rotMatrix[3][3];
@@ -598,8 +587,8 @@ void initParticles(PaddleSide side) {
 	}
 
 	for (i = startIdx; i < endIdx; i++) {
-		v = 0.8f * frand() + 0.2f;  // Random speed
-		phi = frand() * M_PI;       // Random angle for spherical coordinates
+		v = 0.8f * frand() + 0.2f;
+		phi = frand() * M_PI;
 		theta = 2.0f * frand() * M_PI;
 
 		// Transform paddle local position using the boat's rotation matrix
@@ -631,16 +620,11 @@ void initParticles(PaddleSide side) {
 	}
 }
 
-
 void updateParticles()
 {
 	int i;
 	float h;
 
-	/* Método de Euler de integração de eq. diferenciais ordinárias
-	h representa o step de tempo; dv/dt = a; dx/dt = v; e conhecem-se os valores iniciais de x e v */
-
-	//h = 0.125f;
 	h = 0.033;
 	for (i = 0; i < MAX_PARTICULAS; i++)
 	{
@@ -665,7 +649,7 @@ void drawParticles() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glDepthMask(GL_FALSE);  //Depth Buffer Read Only
+	glDepthMask(GL_FALSE);
 	glDisable(GL_CULL_FACE);
 
 	float pos[3], right[3], up[3];
@@ -685,10 +669,7 @@ void drawParticles() {
 
 	for (int i = 0; i < MAX_PARTICULAS; i++)
 	{
-		if (particula[i].life > 0.0f) /* só desenha as que ainda estão vivas */
-		{
-			/* A vida da partícula representa o canal alpha da cor. Como o blend está activo a cor final é a soma da cor rgb do fragmento multiplicada pelo
-			alpha com a cor do pixel destino */
+		if (particula[i].life > 0.0f) { // only draw live particles
 
 			particle_color[0] = particula[i].r;
 			particle_color[1] = particula[i].g;
@@ -700,14 +681,12 @@ void drawParticles() {
 			glUniform4fv(loc, 1, particle_color);
 			loc = glGetUniformLocation(shader.getProgramIndex(), "texUnitDiff");
 			glUniform1i(loc, 0);
-			glUniform1i(normalMap_loc, false);   //GLSL normalMap variable initialized to 0
-			glUniform1i(specularMap_loc, false); //
+			glUniform1i(normalMap_loc, false);
+			glUniform1i(specularMap_loc, false);
 			glUniform1ui(diffMapCount_loc, 1);
 
 			pushMatrix(MODEL);
 			translate(MODEL, particula[i].x, particula[i].y, particula[i].z);
-			//rotateBillboard(&particle_element, &cameras[activeCamera].getPosition()[0], &particle_element.translation[0]);
-			//rotate(MODEL, particle_element.rotation);
 
 			// send matrices to OGL
 			computeDerivedMatrix(PROJ_VIEW_MODEL);
@@ -740,7 +719,6 @@ void handle_movement() {
 	}
 	boat_node.move(movement);
 
-	//myElements[boat.elementNum].translation += boat.direction * boat.speed * deltaTime;
 	if (boat.speed != 0.0F) {
 		boat.speed *= boat.speedDecay;
 		if (abs(boat.speed) <= 0.2)
@@ -873,8 +851,7 @@ void handle_monster_movement() {
 	}
 }
 
-void refresh(int value)
-{
+void refresh(int value) {
 	if (!pauseOn && !deathOn) {
 		handle_collisions();
 
@@ -918,10 +895,6 @@ void refresh(int value)
 		deathOn = true;
 	}
 
-	// boat.pos += boat.speed * boat.direction * deltaTime
-	// if boat.speed > 0:
-	//    boat.speed -= decay
-
 	glutPostRedisplay();
 	glutTimerFunc(1000 / 60, refresh, 0);
 }
@@ -936,11 +909,9 @@ void changeSize(int w, int h) {
 	// Prevent a divide by zero, when window is too short
 	if (h == 0)
 		h = 1;
+
 	// set the viewport to be the entire window
 	glViewport(0, 0, w, h);
-	// set the projection matrix
-	// glGetInteger(GL_VIEWPORT, m_view)
-	// float ratio = (m_view[2] - m_view[0))/(m_view[3] - m_view[1])
 
 	currW = w;
 	currH = h;
@@ -948,8 +919,6 @@ void changeSize(int w, int h) {
 	// set the projection matrix
 	ratio = (1.0f * w) / h;
 	cameras[activeCamera].updateProjectionMatrix(ratio);
-
-
 }
 
 // ------------------------------------------------------------
@@ -958,12 +927,8 @@ void changeSize(int w, int h) {
 //
 
 void setNormalLights(void) {
-	//send the light position in eye coordinates
-		//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
 	GLint loc;
 	float res[4];
-	//multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
-	//glUniform4fv(lPos_uniformId, 1, res);
 
 	loc = glGetUniformLocation(shader.getProgramIndex(), "fogOn");
 	glUniform1i(loc, fogActive ? 1 : 0);
@@ -1024,8 +989,6 @@ void setNormalLights(void) {
 void setReflectionLights(void) {
 	GLint loc;
 	float res[4];
-	//multMatrixPoint(VIEW, lightPos,res);   //lightPos definido em World Coord so is converted to eye space
-	//glUniform4fv(lPos_uniformId, 1, res);
 
 	loc = glGetUniformLocation(shader.getProgramIndex(), "fogOn");
 	glUniform1i(loc, fogActive ? 1 : 0);
@@ -1096,7 +1059,6 @@ void setReflectionLights(void) {
 
 void drawMirror() {
 	// Create the area for the rear view
-	/* create a diamond shaped stencil area */
 	loadIdentity(PROJECTION);
 	if (currW <= currH)
 		ortho(-2.0, 2.0, -2.0 * (GLfloat)currH / (GLfloat)currW,
@@ -1111,14 +1073,11 @@ void drawMirror() {
 
 	glUseProgram(shader.getProgramIndex());
 
-	//não vai ser preciso enviar o material pois o cubo não é desenhado
-
 	rotate(MODEL, 0.0f, 0.0, 0.0, 1.0);
 	scale(MODEL, 2.0f, 0.6F, 1.0F);
 	translate(MODEL, -0.7f, 2.0f, -0.5f);
 	// send matrices to OGL
 	computeDerivedMatrix(PROJ_VIEW_MODEL);
-	//glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
 	GLint pvm_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_pvm");
 	GLint normal_uniformId = glGetUniformLocation(shader.getProgramIndex(), "m_normal");
 	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
@@ -1169,21 +1128,18 @@ void renderSkybox() {
 	loc = glGetUniformLocation(shader.getProgramIndex(), "mat.shininess");
 	glUniform1f(loc, skyboxMesh.mat.shininess);
 
-	//devido ao fragment shader suporta 2 texturas difusas simultaneas, 1 especular e 1 normal map
-
-	glUniform1i(normalMap_loc, false);   //GLSL normalMap variable initialized to 0
-	glUniform1i(specularMap_loc, false); //
-	glUniform1ui(diffMapCount_loc, 0); // this is for knowing how many texture we want to use
+	glUniform1i(normalMap_loc, false);
+	glUniform1i(specularMap_loc, false);
+	glUniform1ui(diffMapCount_loc, 0);
 
 	//it won't write anything to the zbuffer; all subsequently drawn scenery to be in front of the sky box. 
 	glDepthMask(GL_FALSE);
 	glFrontFace(GL_CW); // set clockwise vertex order to mean the front
 
 	pushMatrix(MODEL);
-	pushMatrix(VIEW);  //se quiser anular a translação
+	pushMatrix(VIEW);
 
-	//  Fica mais realista se não anular a translação da câmara 
-	// Cancel the translation movement of the camera - de acordo com o tutorial do Antons
+	// Cancel the translation movement of the camera, it looks more realistic
 	mMatrix[VIEW][12] = 0.0f;
 	mMatrix[VIEW][13] = 0.0f;
 	mMatrix[VIEW][14] = 0.0f;
@@ -1192,7 +1148,7 @@ void renderSkybox() {
 	translate(MODEL, -0.5f, -0.5f, -0.5f);
 
 	// send matrices to OGL
-	glUniformMatrix4fv(model_uniformId, 1, GL_FALSE, mMatrix[MODEL]); //Transformação de modelação do cubo unitário para o "Big Cube"
+	glUniformMatrix4fv(model_uniformId, 1, GL_FALSE, mMatrix[MODEL]); // Make it "Big Cube"
 	computeDerivedMatrix(PROJ_VIEW_MODEL);
 	glUniformMatrix4fv(vm_uniformId, 1, GL_FALSE, mCompMatrix[VIEW_MODEL]);
 	glUniformMatrix4fv(pvm_uniformId, 1, GL_FALSE, mCompMatrix[PROJ_VIEW_MODEL]);
@@ -1210,29 +1166,19 @@ void renderSkybox() {
 }
 
 void renderMirrorView() {
-
 	GLint loc;
-
 	drawMirror();
 
-	// load identity matrices
 	loadIdentity(VIEW);
 	loadIdentity(MODEL);
 
 	// set the camera using a function similar to gluLookAt
 	vector<float> cameraPos = cameras[activeCamera].getPosition();
 	vector<float> direction = { cameraPos[0] - cameras[activeCamera].target[0], cameraPos[1] - cameras[activeCamera].target[1], cameraPos[2] - cameras[activeCamera].target[2] };
-	//lookAt(cameraPos[0], cameraPos[1], cameraPos[2], cameraPos[0] + direction[0], cameraPos[1] + direction[1], cameraPos[2] + direction[2], cameras[activeCamera].up[0], cameras[activeCamera].up[1], cameras[activeCamera].up[2]);
 
 	lookAt(boat_element.translation[0], boat_element.translation[1] + 3.0F, boat_element.translation[2], boat_element.translation[0] - boat.direction[0], boat_element.translation[1] + 2.6F, boat_element.translation[2] - boat.direction[2], cameras[activeCamera].up[0], cameras[activeCamera].up[1], cameras[activeCamera].up[2]);
 
-	// use our shader
-	//lookAt(cameraPos[0], cameraPos[1], cameraPos[2], cameras[activeCamera].target[0], cameras[activeCamera].target[1], cameras[activeCamera].target[2], cameras[activeCamera].up[0], cameras[activeCamera].up[1], cameras[activeCamera].up[2]);
-
 	glUseProgram(shader.getProgramIndex());
-
-	//send the light position in eye coordinates
-	//glUniform4fv(lPos_uniformId, 1, lightPos); //efeito capacete do mineiro, ou seja lighPos foi definido em eye coord 
 
 	setNormalLights();
 
@@ -1258,9 +1204,9 @@ void renderMirrorView() {
 		mirror_node.draw(false, false);
 		glEnable(GL_DEPTH_TEST);
 
-		glUniform1i(shadowMode_uniformId, 0);  //iluminação phong
+		glUniform1i(shadowMode_uniformId, 0);  //phong lighting
 
-		// Desenhar apenas onde o stencil buffer esta a 1
+		// Draw where the stencil buffer is 4
 		glStencilFunc(GL_EQUAL, 0x4, 0x3);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
@@ -1327,16 +1273,12 @@ void renderMirrorView() {
 	ground_node.draw(false, false);
 
 	if (shadowsActive && dirLightActive) {
-		// Desenhar apenas onde o stencil buffer esta a 1
+		// Draw where the stencil buffer is 4
 		glStencilFunc(GL_EQUAL, 0x4, 0x3);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 		glUniform1i(shadowMode_uniformId, 1);  //Render with constant color
 		glDisable(GL_DEPTH_TEST); //To force the shadow geometry to be rendered even if behind the floor
-
-		//Dark the color stored in color buffer
-		//glBlendFunc(GL_DST_COLOR, GL_ZERO); //do we want this or not???
-		//glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
 
 		scenegraph.draw(true, false);
 
@@ -1349,7 +1291,6 @@ void renderMirrorView() {
 	glStencilFunc(GL_NOTEQUAL, 0x0, 0x3);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
-	//ground_node.draw(false, false);
 	glUniform1i(shadowMode_uniformId, 0);  //Render with constant color
 	scenegraph.draw(false, false);
 	water_node.draw(false, false);
@@ -1460,15 +1401,13 @@ void renderScene(void) {
 	FrameCount++;
 	glClearStencil(0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
 	GLint reflection_loc = glGetUniformLocation(shader.getProgramIndex(), "reflection");
-	glUniform1i(reflection_loc, false);   //GLSL normalMap variable initialized to 0
+	glUniform1i(reflection_loc, false);
 
 	renderMirrorView();
 
-	// load identity matrices
 	loadIdentity(VIEW);
 	loadIdentity(MODEL);
 	// set the camera using a function similar to gluLookAt
@@ -1507,9 +1446,9 @@ void renderScene(void) {
 		mirror_node.draw(false, false);
 		glEnable(GL_DEPTH_TEST);
 
-		glUniform1i(shadowMode_uniformId, 0);  //iluminação phong
+		glUniform1i(shadowMode_uniformId, 0);  //phong lighting
 
-		// Desenhar apenas onde o stencil buffer esta a 1
+		// Draw where the stencil buffer is 1
 		glStencilFunc(GL_EQUAL, 0x1, 0x3);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
@@ -1561,7 +1500,7 @@ void renderScene(void) {
 	// Fill stencil buffer with Ground shape; never rendered into color buffer
 	ground_node.draw(false, false);
 
-	// Desenhar apenas onde o stencil buffer esta a 1
+	// Draw where the stencil buffer is 1
 	glStencilFunc(GL_EQUAL, 0x1, 0x3);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
@@ -1571,10 +1510,6 @@ void renderScene(void) {
 	if (shadowsActive && dirLightActive) {
 		glUniform1i(shadowMode_uniformId, 1);  //Render with constant color
 		glDisable(GL_DEPTH_TEST); //To force the shadow geometry to be rendered even if behind the floor
-
-		//Dark the color stored in color buffer
-		//glBlendFunc(GL_DST_COLOR, GL_ZERO); //do we want this or not???
-		//glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
 
 		scenegraph.draw(true, false);
 
@@ -1598,7 +1533,6 @@ void renderScene(void) {
 		drawParticles();
 
 	if (flareEffect && dirLightActive) {
-
 		int flarePos[2];
 		int m_viewport[4];
 		glGetIntegerv(GL_VIEWPORT, m_viewport);
@@ -1615,8 +1549,7 @@ void renderScene(void) {
 
 		float lookAtY = cameras[activeCamera].target[1] - cameras[activeCamera].getPosition()[1];
 
-		if (lookAtY > 0) { // checks if light source is in front of the camera
-			//viewer looking down at  negative z direction
+		if (lookAtY > 0) { // checks if the camera is looking up
 			pushMatrix(PROJECTION);
 			loadIdentity(PROJECTION);
 			pushMatrix(VIEW);
@@ -1630,11 +1563,9 @@ void renderScene(void) {
 
 	//Render text (bitmap fonts) in screen coordinates. So use ortoghonal projection with viewport coordinates.
 	//the glyph contains transparent background colors and non-transparent for the actual character pixels. So we use the blending
-
 	int m_viewport[4];
 	glGetIntegerv(GL_VIEWPORT, m_viewport);
 
-	//viewer at origin looking down at  negative z direction
 	pushMatrix(MODEL);
 	loadIdentity(MODEL);
 	pushMatrix(PROJECTION);
@@ -1657,8 +1588,7 @@ void renderScene(void) {
 	RenderText(shaderText, "Time: " + formattedTime, 25.0f, 710.0f, 1.0f, 0.5f, 0.8f, 0.2f);
 	RenderText(shaderText, "Lives: " + to_string(livesRemaining), 25.0f, 650.0f, 1.0f, 0.5f, 0.8f, 0.2f);
 	RenderText(shaderText, "Level: " + to_string(level), 800.0f, 710.0f, 1.0f, 0.5f, 0.8f, 0.2f);
-	//RenderText(shaderText, "This is a sample text", 25.0f, 25.0f, 1.0f, 0.5f, 0.8f, 0.2f);
-	//RenderText(shaderText, "AVT Light and Text Rendering Demo", 440.0f, 570.0f, 0.5f, 0.3, 0.7f, 0.9f);
+
 	popMatrix(PROJECTION);
 	popMatrix(VIEW);
 	popMatrix(MODEL);
@@ -1805,7 +1735,6 @@ void processMouseButtons(int button, int state, int xx, int yy)
 }
 
 // Track mouse motion while buttons are pressed
-
 void processMouseMotion(int xx, int yy)
 {
 	if (activeCamera == 2) {
@@ -1850,10 +1779,6 @@ void processMouseMotion(int xx, int yy)
 		cameras[activeCamera].distance = rAux;
 		cameras[activeCamera].setOffset();
 	}
-
-
-	//  uncomment this if not using an idle or refresh func
-	//	glutPostRedisplay();
 }
 
 
@@ -1867,9 +1792,6 @@ void mouseWheel(int wheel, int direction, int x, int y) {
 		cameras[activeCamera].distance = 0.1f;
 
 	cameras[activeCamera].setOffset();
-
-	//  uncomment this if not using an idle or refresh func
-	//	glutPostRedisplay();
 }
 
 // --------------------------------------------------------
@@ -1894,12 +1816,6 @@ GLuint setupShaders() {
 	glLinkProgram(shader.getProgramIndex());
 	printf("InfoLog for Model Rendering Shader\n%s\n\n", shaderText.getAllInfoLogs().c_str());
 
-	/*
-	if (!shader.isProgramValid()) {
-		printf("GLSL Model Program Not Valid!\n");
-		exit(1);
-	}
-	*/
 
 	printf("InfoLog for Per Fragment Phong Lightning Shader\n%s\n\n", shader.getAllInfoLogs().c_str());
 
@@ -1985,7 +1901,6 @@ void initMap()
 	ground_element.translation = { 0.0F, -2.0F, 0.0F };
 	ground_element.rotation = { -90.0F, 1.0F, 0.0F, 0.0F };
 	ground_node = ScenegraphNode(&ground_element, &shader, NO_MODE);
-	//scenegraph.addNode(&ground_node);
 
 	// Islands ------------------------------------------
 	island1_element.translation = { 50.0F, 0.0F, -70.0F }; //Starting position
@@ -2718,7 +2633,6 @@ void init()
 	Texture2D_Loader(FlareTextureArray, "sun.tga", 4);
 
 	// Cube map texture
-	//Array com 4 Texture Objects
 	glGenTextures(1, CubeMapTextureArray);
 	//Sky Box Texture Object
 	const char* filenames[] = { "posx.jpg", "negx.jpg", "posy.jpg", "negy.jpg", "posz.jpg", "negz.jpg" };
@@ -2810,11 +2724,10 @@ void init()
 		island4_node.addNode(&house4_node);
 	}
 
-
 	// some GL settings
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);		 // cull back face
+	glCullFace(GL_BACK); // cull back face
 	glFrontFace(GL_CCW); // set counter-clockwise vertex order to mean the front
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_MULTISAMPLE);
@@ -2827,7 +2740,6 @@ void init()
 //
 // Main function
 //
-
 
 int main(int argc, char** argv) {
 
@@ -2843,14 +2755,12 @@ int main(int argc, char** argv) {
 	glutInitWindowSize(WinX, WinY);
 	WindowHandle = glutCreateWindow(CAPTION);
 
-
 	//  Callback Registration
 	glutDisplayFunc(renderScene);
 	glutReshapeFunc(changeSize);
 
 	glutTimerFunc(0, timer, 0);
-	//glutIdleFunc(renderScene);  // Use it for maximum performance
-	glutTimerFunc(0, refresh, 0);    //use it to to get 60 FPS whatever
+	glutTimerFunc(0, refresh, 0);  //use it to to get 60 FPS whatever
 
 	//	Mouse and Keyboard Callbacks
 	glutKeyboardFunc(processKeys);
@@ -2859,7 +2769,6 @@ int main(int argc, char** argv) {
 	glutMotionFunc(processMouseMotion);
 	glutMouseWheelFunc(mouseWheel);
 	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
-
 
 	//	return from main loop
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
@@ -2879,7 +2788,7 @@ int main(int argc, char** argv) {
 	init();
 
 	renderScene();
-	//  GLUT main loop
+	// GLUT main loop
 	glutMainLoop();
 
 	return(0);
@@ -2906,13 +2815,11 @@ void loadFlareFile(FLARE_DEF* flare, char* filename)
 	memset(flare, 0, sizeof(FLARE_DEF));
 
 	f = fopen(filename, "r");
-	if (f)
-	{
+	if (f) {
 		fgets(buf, sizeof(buf), f);
 		sscanf(buf, "%f %f", &flare->fScale, &flare->fMaxSize);
 
-		while (!feof(f))
-		{
+		while (!feof(f)) {
 			char            name[8] = { '\0', };
 			double          dDist = 0.0, dSize = 0.0;
 			float			color[4];
@@ -2920,8 +2827,7 @@ void loadFlareFile(FLARE_DEF* flare, char* filename)
 
 			fgets(buf, sizeof(buf), f);
 			fields = sscanf(buf, "%4s %lf %lf ( %f %f %f %f )", name, &dDist, &dSize, &color[3], &color[0], &color[1], &color[2]);
-			if (fields == 7)
-			{
+			if (fields == 7) {
 				for (int i = 0; i < 4; ++i) color[i] = clamp(color[i] / 255.0f, 0.0f, 1.0f);
 				id = getTextureId(name);
 				if (id < 0) printf("Texture name not recognized\n");

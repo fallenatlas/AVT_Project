@@ -7,15 +7,15 @@ struct Cube
 	static constexpr int faceCount = 12;
 
 	static constexpr float vertices[] = {	//Cube
-		0.0f, 1.0f, 1.0f, 1.0f, //yes
-		0.0f, 0.0f, 1.0f, 1.0f, //yes
-		1.0f, 0.0f, 1.0f, 1.0f, //yes
-		1.0f, 1.0f, 1.0f, 1.0f, //yes
+		0.0f, 1.0f, 1.0f, 1.0f,
+		0.0f, 0.0f, 1.0f, 1.0f,
+		1.0f, 0.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 1.0f,
 
-		1.0f, 1.0f, 0.0f, 1.0f, //yes
-		1.0f, 0.0f, 0.0f, 1.0f, //yes
-		0.0f, 0.0f, 0.0f, 1.0f, //yes
-		0.0f, 1.0f, 0.0f, 1.0f, //yes
+		1.0f, 1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 0.0f, 1.0f,
+		0.0f, 1.0f, 0.0f, 1.0f,
 
 		1.0f, 1.0f, 1.0f, 1.0f,
 		1.0f, 0.0f, 1.0f, 1.0f,

@@ -36,14 +36,14 @@ in Data {
 	vec3 viewEye;
 	vec3 skyboxTexCoord;
 
-	vec3 directionalLightDir; // compute these, maybe test if this works first
+	vec3 directionalLightDir;
 	vec3 pointLightsDir[NUM_POINT_LIGHTS];
 	vec3 spotLightsDir[NUM_SPOT_LIGHTS];
 	vec3 spotLigthsPointingDirection[NUM_SPOT_LIGHTS];
 	float spotLightsCutOff[NUM_SPOT_LIGHTS];
 } DataIn;
 
-uniform bool normalMap;  //for normal mapping
+uniform bool normalMap;
 uniform bool specularMap;
 uniform uint diffMapCount;
 
@@ -60,7 +60,6 @@ const float reflect_factor = 0.9;
 const float constant = 1.0;
 const float linear = 0.07;
 const float quadratic = 0.017;
-
 
 void calculateDirLight(vec3 lightDir, vec3 n, vec3 e);
 void calculatePointLight(vec3 lightDir, vec3 n, vec3 e);
@@ -91,7 +90,7 @@ void main()
 	}
 	else {
 		vec3 n;
-		if(normalMap)
+		if (normalMap)
 			n = normalize(2.0 * texture(texUnitNormalMap, DataIn.tex_coord).rgb - 1.0);  //normal in tangent space
 		else
 			n = normalize(DataIn.normal);
@@ -172,8 +171,7 @@ void main()
 	}
 }
 
-void calculateDirLight(vec3 lightDir, vec3 n, vec3 e)
-{
+void calculateDirLight(vec3 lightDir, vec3 n, vec3 e) {
 	vec4 spec = vec4(0.0);
 
 	vec3 l = normalize(lightDir); //fragPos can be -eye
@@ -189,8 +187,7 @@ void calculateDirLight(vec3 lightDir, vec3 n, vec3 e)
 	specSum += spec;
 }  
 
-void calculatePointLight(vec3 lightDir, vec3 n, vec3 e)
-{
+void calculatePointLight(vec3 lightDir, vec3 n, vec3 e) {
 	vec4 spec = vec4(0.0);
 
 	float dist = length(lightDir);
@@ -209,8 +206,7 @@ void calculatePointLight(vec3 lightDir, vec3 n, vec3 e)
 	specSum += attenuation * spec;
 }
 
-void calculateSpotLight(vec3 lightDir, vec3 pointingDir, float cutOff, vec3 n, vec3 e) // should be just position for now
-{
+void calculateSpotLight(vec3 lightDir, vec3 pointingDir, float cutOff, vec3 n, vec3 e) {
 	vec4 spec = vec4(0.0);
 	vec4 texel, texel1; 
 

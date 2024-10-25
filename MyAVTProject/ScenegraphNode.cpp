@@ -59,12 +59,10 @@ void ScenegraphNode::aiRecursive_render(const aiNode* nd, std::vector<struct MyM
 		loc = glGetUniformLocation(Shader->getProgramIndex(), "mat.texCount");
 		glUniform1i(loc, myMeshes[nd->mMeshes[n]].mat.texCount);
 
-		unsigned int  diffMapCount = 0;  //read 2 diffuse textures
+		unsigned int  diffMapCount = 0;
 
-		//devido ao fragment shader suporta 2 texturas difusas simultaneas, 1 especular e 1 normal map
-
-		glUniform1i(normalMap_loc, false);   //GLSL normalMap variable initialized to 0
-		glUniform1i(specularMap_loc, false); //
+		glUniform1i(normalMap_loc, false);  //GLSL normalMap variable initialized to 0
+		glUniform1i(specularMap_loc, false);
 		glUniform1ui(diffMapCount_loc, 0); // this is for knowing how many texture we want to use
 
 		if (myMeshes[nd->mMeshes[n]].mat.texCount != 0)
@@ -115,13 +113,6 @@ void ScenegraphNode::aiRecursive_render(const aiNode* nd, std::vector<struct MyM
 		// bind VAO
 		glBindVertexArray(myMeshes[nd->mMeshes[n]].vao);
 
-		/*
-		if (!Shader->isProgramValid()) {
-			printf("Program Not Valid!\n");
-			exit(1);
-		}
-		*/
-		// draw
 		glDrawElements(myMeshes[nd->mMeshes[n]].type, myMeshes[nd->mMeshes[n]].numIndexes, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}
@@ -141,7 +132,6 @@ void ScenegraphNode::draw(bool shadowMode, bool reflectionMode) {
     scale(MODEL, Element->scale);
 
 	if (Element->usingAssimp) {
-		// call airecursive_render
 		aiRecursive_render(Element->scene->mRootNode, Element->meshes, Element->textureIds);
 	}
 	else {
@@ -167,11 +157,9 @@ void ScenegraphNode::draw(bool shadowMode, bool reflectionMode) {
 			loc = glGetUniformLocation(Shader->getProgramIndex(), "mat.shininess");
 			glUniform1f(loc, Element->mesh.mat.shininess);
 
-			//devido ao fragment shader suporta 2 texturas difusas simultaneas, 1 especular e 1 normal map
-
-			glUniform1i(normalMap_loc, Element->normalMapKey);   //GLSL normalMap variable initialized to 0
-			glUniform1i(specularMap_loc, false); //
-			glUniform1ui(diffMapCount_loc, 0); // this is for knowing how many texture we want to use
+			glUniform1i(normalMap_loc, Element->normalMapKey);
+			glUniform1i(specularMap_loc, false);
+			glUniform1ui(diffMapCount_loc, 0);
 
 			if (Element->numTextures == 1) {
 				glActiveTexture(GL_TEXTURE0);

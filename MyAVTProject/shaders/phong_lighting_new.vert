@@ -5,7 +5,7 @@
 
 uniform mat4 m_pvm;
 uniform mat4 m_viewModel;
-uniform mat4 m_Model;   //por causa do cubo para a skybox
+uniform mat4 m_Model;
 uniform mat3 m_normal;
 
 uniform vec4 l_pos;
@@ -13,7 +13,7 @@ uniform bool normalMap;
 uniform bool reflection;
 
 in vec4 position;
-in vec4 normal, tangent, bitangent;   //por causa do gerador de geometria
+in vec4 normal, tangent, bitangent;
 in vec4 texCoord;
 
 struct DirLight {
@@ -64,7 +64,7 @@ void main () {
 
 	DataOut.skyboxTexCoord = vec3(m_Model * position);
 	if (!reflection) {
-		DataOut.skyboxTexCoord.x = - DataOut.skyboxTexCoord.x; //Texturas mapeadas no interior logo negar a coordenada x
+		DataOut.skyboxTexCoord.x = - DataOut.skyboxTexCoord.x; // Textures mapped on the interior so invert x coordenate
 	}
 	DataOut.tex_coord = texCoord.st;
 
